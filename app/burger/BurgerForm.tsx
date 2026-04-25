@@ -189,9 +189,27 @@ export default function BurgerForm() {
           </div>
 
           {addressError && (
-            <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2">
-              {addressError}
-            </p>
+            <div className="space-y-2">
+              <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2">
+                {addressError}
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  if (!postcodeInput.trim() || !huisnummerInput.trim()) return;
+                  setAddress({
+                    postcode: postcodeInput.trim().toUpperCase(),
+                    neighbourhood: "Bilthoven",
+                    streetReference: `nr ${huisnummerInput.trim()}`,
+                  });
+                  setAddressError(null);
+                  setStep("concern");
+                }}
+                className="text-sm text-neutral-700 underline hover:text-neutral-900"
+              >
+                Toch doorgaan zonder PDOK-verificatie
+              </button>
+            </div>
           )}
 
           <button
