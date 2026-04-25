@@ -24,6 +24,7 @@ export default function ProfileStep({
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const [suggestError, setSuggestError] = useState(false);
+  const [lookupLoading, setLookupLoading] = useState(false);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -34,7 +35,9 @@ export default function ProfileStep({
     voornaam.trim().length > 0 &&
     achternaam.trim().length > 0 &&
     leeftijdValid &&
-    selectedAddress !== null;
+    selectedAddress !== null &&
+    Boolean(selectedAddress.postcode) &&
+    !lookupLoading;
 
   function handleAddressInput(val: string) {
     setAddressInput(val);
@@ -45,7 +48,7 @@ export default function ProfileStep({
     setHighlightedIndex(-1);
 
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    if (val.length < 4) return;
+    if (val.length < 2) return;
 
     debounceRef.current = setTimeout(async () => {
       abortControllerRef.current?.abort();
@@ -68,13 +71,28 @@ export default function ProfileStep({
     }, 300);
   }
 
-  function selectSuggestion(s: SuggestResult) {
-    setSelectedAddress(s);
+  async function selectSuggestion(s: SuggestResult) {
     setAddressInput(s.label);
     setSuggestions([]);
     setDropdownOpen(false);
     setHighlightedIndex(-1);
     setSuggestError(false);
+    setLookupLoading(true);
+    try {
+      const res = await fetch(`/api/pdok-lookup?id=${encodeURIComponent(s.id)}`);
+      if (!res.ok) {
+        setSuggestError(true);
+        setSelectedAddress(null);
+        return;
+      }
+      const full = (await res.json()) as SuggestResult;
+      setSelectedAddress(full);
+    } catch {
+      setSuggestError(true);
+      setSelectedAddress(null);
+    } finally {
+      setLookupLoading(false);
+    }
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
@@ -96,26 +114,32 @@ export default function ProfileStep({
 
   function handleBypass() {
     const manualAddress: SuggestResult = {
+      id: "manual",
       label: addressInput || "Bilthoven (handmatig)",
       postcode: "3722 HD",
       straatnaam: "Bilthoven",
       huis_nlt: "",
       neighbourhood: "Bilthoven",
     };
-    selectSuggestion(manualAddress);
+    setAddressInput(manualAddress.label);
+    setSuggestions([]);
+    setDropdownOpen(false);
+    setHighlightedIndex(-1);
+    setSuggestError(false);
+    setSelectedAddress(manualAddress);
   }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!canSubmit || !selectedAddress) return;
+    if (!canSubmit || !selectedAddress?.postcode) return;
     onComplete({
       voornaam: voornaam.trim(),
       achternaam: achternaam.trim(),
       leeftijd,
       postcode: selectedAddress.postcode,
-      neighbourhood: selectedAddress.neighbourhood,
-      straatnaam: selectedAddress.straatnaam,
-      huis_nlt: selectedAddress.huis_nlt,
+      neighbourhood: selectedAddress.neighbourhood ?? "Bilthoven",
+      straatnaam: selectedAddress.straatnaam ?? "",
+      huis_nlt: selectedAddress.huis_nlt ?? "",
       language,
       lat: selectedAddress.lat,
       lon: selectedAddress.lon,
@@ -217,7 +241,7 @@ export default function ProfileStep({
             onKeyDown={handleKeyDown}
             onFocus={() => suggestions.length > 0 && setDropdownOpen(true)}
             onBlur={() => setTimeout(() => setDropdownOpen(false), 150)}
-            placeholder="Emmalaan 12, 3722 XL Bilthoven"
+            placeholder="Begin met typen, bijv. Emmalaan 12"
             autoComplete="off"
             style={{
               width: "100%",
@@ -284,13 +308,19 @@ export default function ProfileStep({
       </div>
 
       {/* Status / bypass */}
-      {selectedAddress && (
-        <p style={{ fontSize: 12, color: "var(--moss-600)", margin: "0 0 20px 0" }}>
-          ✓ Adres geselecteerd: {selectedAddress.postcode} · {selectedAddress.neighbourhood}
+      {lookupLoading && (
+        <p style={{ fontSize: 12, color: "var(--fg-muted)", margin: "0 0 20px 0" }}>
+          Adres ophalen…
         </p>
       )}
 
-      {suggestError && !selectedAddress && addressInput.length >= 4 && (
+      {selectedAddress?.postcode && !lookupLoading && (
+        <p style={{ fontSize: 12, color: "var(--moss-600)", margin: "0 0 20px 0" }}>
+          ✓ Adres geselecteerd: {selectedAddress.postcode} · {selectedAddress.neighbourhood ?? "Bilthoven"}
+        </p>
+      )}
+
+      {suggestError && !selectedAddress && !lookupLoading && addressInput.length >= 2 && (
         <div style={{
           fontSize: 13,
           color: "var(--fg-muted)",
@@ -320,9 +350,9 @@ export default function ProfileStep({
         </div>
       )}
 
-      {!selectedAddress && !suggestError && (
+      {!selectedAddress && !suggestError && !lookupLoading && (
         <p style={{ fontSize: 12, color: "var(--fg-muted)", margin: "0 0 20px 0" }}>
-          Typ minimaal 4 tekens om adressuggesties te zien.
+          Typ minimaal 2 tekens om adressuggesties te zien.
         </p>
       )}
 

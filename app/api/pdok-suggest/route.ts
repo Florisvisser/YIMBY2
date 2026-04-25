@@ -4,35 +4,14 @@ import type { SuggestResult } from "@/lib/data/types";
 export const runtime = "nodejs";
 
 const QuerySchema = z.object({
-  q: z.string().min(4).max(100),
+  q: z.string().min(2).max(100),
 });
 
-type PdokDoc = {
+type PdokSuggestDoc = {
+  id?: string;
   weergavenaam?: string;
-  postcode?: string;
-  straatnaam?: string;
-  huis_nlt?: string;
-  buurtnaam?: string;
-  wijknaam?: string;
-  woonplaatsnaam?: string;
-  centroide_ll?: string;
+  type?: string;
 };
-
-function parseCentroide(raw?: string): { lat: number; lon: number } | null {
-  if (!raw) return null;
-  const m = raw.match(/POINT\s*\(\s*([-\d.]+)\s+([-\d.]+)\s*\)/i);
-  if (!m) return null;
-  const lon = Number(m[1]);
-  const lat = Number(m[2]);
-  if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
-  return { lat, lon };
-}
-
-function normalizePostcode(raw: string): string {
-  const compact = raw.replace(/\s+/g, "").toUpperCase();
-  if (compact.length !== 6) return raw.toUpperCase();
-  return `${compact.slice(0, 4)} ${compact.slice(4)}`;
-}
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
@@ -45,38 +24,24 @@ export async function GET(request: Request) {
     const params = new URLSearchParams({
       q: parsed.data.q,
       fq: "type:adres",
-      fl: "weergavenaam,postcode,straatnaam,huis_nlt,buurtnaam,wijknaam,woonplaatsnaam,centroide_ll",
+      fl: "id,weergavenaam,type",
       rows: "6",
     });
     const res = await fetch(
-      `https://api.pdok.nl/bzk/locatieserver/search/v3_1/free?${params.toString()}`,
+      `https://api.pdok.nl/bzk/locatieserver/search/v3_1/suggest?${params.toString()}`,
       { signal: AbortSignal.timeout(3000), cache: "no-store" },
     );
     if (!res.ok) return Response.json([] as SuggestResult[]);
 
-    const data = (await res.json()) as { response?: { docs?: PdokDoc[] } };
+    const data = (await res.json()) as { response?: { docs?: PdokSuggestDoc[] } };
     const docs = data?.response?.docs ?? [];
 
     const results: SuggestResult[] = docs
       .filter(
-        (d): d is PdokDoc & { postcode: string; straatnaam: string } =>
-          Boolean(d.postcode && d.straatnaam),
+        (d): d is PdokSuggestDoc & { id: string; weergavenaam: string } =>
+          Boolean(d.id && d.weergavenaam),
       )
-      .map((d) => {
-        const coord = parseCentroide(d.centroide_ll);
-        return {
-          label:
-            d.weergavenaam ??
-            `${d.straatnaam} ${d.huis_nlt ?? ""}, ${normalizePostcode(d.postcode)}`.trim(),
-          postcode: normalizePostcode(d.postcode),
-          straatnaam: d.straatnaam,
-          huis_nlt: d.huis_nlt ?? "",
-          neighbourhood:
-            d.buurtnaam ?? d.wijknaam ?? d.woonplaatsnaam ?? "Bilthoven",
-          lat: coord?.lat,
-          lon: coord?.lon,
-        };
-      });
+      .map((d) => ({ id: d.id, label: d.weergavenaam }));
 
     return Response.json(results);
   } catch {

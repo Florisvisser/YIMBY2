@@ -91,11 +91,12 @@ export type MotiveringRequest = {
 };
 
 export type SuggestResult = {
+  id: string;
   label: string;
-  postcode: string;
-  straatnaam: string;
-  huis_nlt: string;
-  neighbourhood: string;
+  postcode?: string;
+  straatnaam?: string;
+  huis_nlt?: string;
+  neighbourhood?: string;
   lat?: number;
   lon?: number;
 };
