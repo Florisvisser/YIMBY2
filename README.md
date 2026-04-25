@@ -10,8 +10,8 @@ Hackathon-demo voor het Schapenweide-project (Bilthoven). De app laat zien hoe b
 Burger dient zorg in (/burger)
   → gemeente ziet geclusterd dashboard (/gemeente)
   → "Genereer verslag" produceert concept-motivering (Claude)
-  → gemeente markeert in behandeling / beantwoord
-  → burger ziet status van eigen zorgen (/burger/mijn-zorgen)
+  → gemeente ondertekent & publiceert (verslag → Supabase, alle concerns → "Beantwoord")
+  → burger ziet B1-uitleg per categorie in eigen portal (/burger/mijn-zorgen)
 ```
 
 ## Lokaal draaien
@@ -41,8 +41,9 @@ Env vars (zie `.env.example`):
 | `/api/motivering` | `POST` één Claude-call → concept verslag |
 | `/api/concerns` | `POST` zienswijze → Supabase, Phase 2 |
 | `/api/concerns/[id]` | `PATCH` status (new \| in_review \| answered), Phase 3 |
-| `/api/concerns/mine` | `POST` `{ids}` → eigen zienswijzen, Phase 3 |
+| `/api/concerns/mine` | `POST` `{ids}` → eigen zienswijzen verrijkt met `verslagAnswer` per categorie, Phase 3/4 |
 | `/api/pdok` | `GET` proxy naar PDOK Locatieserver, Phase 2 |
+| `/api/reports/publish` | `POST` ondertekend verslag → Supabase + bulk-flip concerns naar `answered`, Phase 4 |
 
 ## Scripts
 

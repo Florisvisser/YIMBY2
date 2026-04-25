@@ -48,3 +48,13 @@ Na succesvolle submit schrijft `BurgerForm.handleSubmit` het returned `id` in lo
 - `mijn-zorgen/MijnZorgenList.tsx` is **Client**. Gebruikt `useSyncExternalStore` om localStorage te lezen (geen `set-state-in-effect` lint-issue, geen hydration mismatch). POST `/api/concerns/mine` met `{ ids }` → render lijst met categorie + tekst + status-badge + datum.
 - States: demo-modus banner (env mist), loading, empty (geen IDs of geen DB-rijen), error, lijst.
 - **Geen mutatie-knoppen** — burger is read-only consument. Status-mutatie is gemeente-only.
+
+## Antwoord-threading (Phase 4)
+
+Als een concern `status === "answered"` heeft **én** `verslagAnswer` aanwezig is, rendert `MijnZorgenList.tsx` onder de status-badge een moss-getint kaartje:
+
+> **Antwoord van Gemeente De Bilt** · ondertekend {datum} · ref. `SP-2026-XXXX`
+>
+> {residentExplanation uit de matchende verslag-sectie — B1-Nederlands}
+
+Het antwoord komt mee in de `/api/concerns/mine` response als `ConcernWithAnswer` (zie `lib/data/types.ts`). Status-badge zonder `verslagAnswer` → val terug op alleen badge (verslag is dan nog niet gepubliceerd; voorkomt "leeg antwoord"-paradox). De cache-invalidatie van localStorage-snapshots is gefixt in commit `1f17c22` — niet "verbeteren" zonder reden.

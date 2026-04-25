@@ -10,14 +10,17 @@ Lees eerst `/AGENTS.md` en `/lib/CLAUDE.md`. Hier staat alleen route-handler-spe
 | `/api/motivering` | `POST` | `{ projectId: "schapenweide", forceFallback?: boolean }` | `MotiveringReport` |
 | `/api/concerns` | `POST` | `{ postcode, neighbourhood, streetReference?, category, severity (1–5), concernText }` | `201` + `Concern` |
 | `/api/concerns/[id]` | `PATCH` | `{ status: "new" \| "in_review" \| "answered" }` | `200` + updated `Concern` |
-| `/api/concerns/mine` | `POST` | `{ ids: uuid[] }` (max 50) | `Concern[]` |
+| `/api/concerns/mine` | `POST` | `{ ids: uuid[] }` (max 50) | `ConcernWithAnswer[]` (verrijkt met `verslagAnswer` op `answered`) |
 | `/api/pdok` | `GET` | `?postcode=3722HD&huisnummer=12` | `{ postcode, neighbourhood, streetReference? }` |
+| `/api/reports/publish` | `POST` | `{ report: MotiveringReport }` | `200` + `PublishedReport` (incl. `reference` `SP-2026-XXXX`) |
 
 **`/api/concerns`** valideert via `ConcernSubmitSchema`, inserted via anon key (RLS), roept `revalidatePath('/gemeente')` aan. Server vult `projectId='schapenweide'`, `personaType='underrepresented_resident'`, `submittedAt=now()`. Bij DB/env-fail: `500` + `{ error }`.
 
 **`/api/concerns/[id]` PATCH** (Phase 3) — status-mutatie door gemeente. Valideert UUID + `StatusPatchSchema`. Server is de gatekeeper: alleen status wordt doorgegeven aan `updateConcernStatus`, andere kolommen blijven onaangetast (RLS UPDATE policy is permissief omdat Postgres geen kolom-policies kent). `revalidatePath('/gemeente')` én `revalidatePath('/burger/mijn-zorgen')`.
 
-**`/api/concerns/mine` POST** (Phase 3) — fetch by id-list voor `/burger/mijn-zorgen`. Body `{ ids: uuid[] }`, max 50, `MineSchema`. POST i.p.v. GET om URL-lengtelimiet te vermijden bij vele submissions en schoner in proxy/CDN logs.
+**`/api/concerns/mine` POST** (Phase 3) — fetch by id-list voor `/burger/mijn-zorgen`. Body `{ ids: uuid[] }`, max 50, `MineSchema`. POST i.p.v. GET om URL-lengtelimiet te vermijden bij vele submissions en schoner in proxy/CDN logs. **Phase 4**: parallel met `readLatestPublishedReport("schapenweide")` via `Promise.allSettled` — fail van report-fetch geeft graceful degradation (concerns terug zonder `verslagAnswer`). Per `answered` concern wordt `section.category === CATEGORY_LABEL_NL[concern.category]` gematcht; bij hit komt `verslagAnswer/SignedAt/Reference` mee.
+
+**`/api/reports/publish` POST** (Phase 4) — body `{ report: MotiveringReport }`. Server valideert via `MotiveringReportSchema.safeParse` zodat een gemanipuleerde body niet in de DB belandt. Roept `publishReport()` aan: INSERT in `published_reports` + bulk-flip concerns naar `answered`. `revalidatePath('/gemeente')` én `revalidatePath('/burger/mijn-zorgen')`. Bij ontbrekende Supabase env-vars: `500` met duidelijke message.
 
 **`/api/pdok`** proxy naar Locatieserver. Geen API-key nodig. Bij geen match: `404`. Bij PDOK down/timeout: `502`/`504`. `AbortSignal.timeout(5000)` op de fetch. Normaliseert postcode terug naar `"1234 AB"` formaat.
 

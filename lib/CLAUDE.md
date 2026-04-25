@@ -7,16 +7,17 @@ Lees eerst `/AGENTS.md` voor de project-regels. Hier staat alleen wat specifiek 
 ```
 lib/
   data/
-    types.ts              ConcernCategory, Concern (incl. source + status), ConcernStatus, MotiveringReport
-    concerns-json.ts      raw read uit data/seeded-concerns.json — wrapt elk item met source: 'seed'
-    concerns-supabase.ts  read+insert+update by REST + anon key (RLS); rowToConcern zet source: 'db'
-    concerns.ts           adapter: getConcerns() (seed ⊕ DB), groupByCategory(), getCategoryStats()
-    schema-concern.ts     zod schemas: ConcernSubmitSchema, StatusPatchSchema, MineSchema
+    types.ts                ConcernCategory, Concern, ConcernStatus, ConcernWithAnswer, PublishedReport, MotiveringReport
+    concerns-json.ts        raw read uit data/seeded-concerns.json — wrapt elk item met source: 'seed'
+    concerns-supabase.ts    read+insert+update by REST + anon key (RLS); rowToConcern zet source: 'db'
+    concerns.ts             adapter: getConcerns() (seed ⊕ DB), groupByCategory(), getCategoryStats()
+    published-reports.ts    publishReport() (INSERT + bulk concern-flip naar answered) + readLatestPublishedReport()
+    schema-concern.ts       zod schemas: ConcernSubmitSchema, StatusPatchSchema, MineSchema
   motivering/
-    schema.ts             zod schema voor MotiveringReport
-    fallback.ts           getFallbackReport() — leest + valideert data/motivering-fallback.json
+    schema.ts               zod schema voor MotiveringReport (per-sectie residentExplanation = B1-uitleg)
+    fallback.ts             getFallbackReport() — leest + valideert data/motivering-fallback.json
   prompts/
-    motivering.ts         buildMotiveringPrompt(concerns) → string
+    motivering.ts           buildMotiveringPrompt(concerns) → string
 ```
 
 ## Patroon: Claude-call (`/api/motivering`)
@@ -57,6 +58,12 @@ const [seeded, supa] = await Promise.allSettled([
 
 - `readSupabaseConcernsByIds(ids: string[])` — REST GET met `id=in.(uuid1,...)`. Voor `/burger/mijn-zorgen`. Lege lijst als env mist.
 - `updateConcernStatus(id, status)` — REST PATCH met `Prefer: return=representation`. Throws bij fail. Server-route is gatekeeper omdat RLS UPDATE permissief is (Postgres heeft geen kolom-policies).
+
+## Phase 4 helpers (`published-reports.ts`)
+
+- `publishReport(report: MotiveringReport): Promise<PublishedReport>` — telt bestaande rijen, genereert reference `SP-{jaar}-{padded}`, INSERT in `published_reports`, daarna **bulk-PATCH** alle `db` concerns van project waar `status != 'answered'` → `'answered'`. Bulk-flip via `Promise.allSettled` (niet `Promise.all`) zodat een gefaalde update nooit het verslag killt; faalt stil met `console.warn`. UNIQUE-constraint op `reference` vangt race-conditions op met 409.
+- `readLatestPublishedReport(projectId): Promise<PublishedReport | null>` — `order=signed_at.desc&limit=1`. Door `/api/concerns/mine` aangeroepen om elke `answered` concern te verrijken met `verslagAnswer` via categorie-match op `CATEGORY_LABEL_NL`.
+- Beide gooien duidelijke errors als Supabase env-vars ontbreken (zelfde patroon als `concerns-supabase.ts`).
 
 ## Severity-aggregatie
 

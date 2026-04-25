@@ -14,9 +14,15 @@ Dit project is een hackathon-demo. We bouwen met twee non-technical mensen via C
 
 **Phase 2 (af)**: `/burger` (3-stappen wizard), `/api/concerns` (POST + Supabase insert + revalidatePath), `/api/pdok` (Locatieserver proxy), Supabase `concerns` tabel, `lib/data/concerns-supabase.ts` adapter. `getConcerns()` retourneert seed ⊕ DB.
 
-**Phase 3 (huidig)**: gescheiden burger- en gemeente-interfaces met status-loop. `Concern.source: 'seed' \| 'db'` discriminator, `Concern.status?: 'new' \| 'in_review' \| 'answered'`. Routes `PATCH /api/concerns/[id]` (status mutatie) + `POST /api/concerns/mine` (fetch by id-list). Burger-view `/burger/mijn-zorgen` met localStorage-IDs (`samenspraak.submissions.v1`). Gemeente-dashboard krijgt sectie "Recente burger-inzendingen" met filter-chips + status-knoppen + optimistic UI.
+**Phase 3 (af)**: gescheiden burger- en gemeente-interfaces met status-loop. `Concern.source: 'seed' \| 'db'` discriminator, `Concern.status?: 'new' \| 'in_review' \| 'answered'`. Routes `PATCH /api/concerns/[id]` (status mutatie) + `POST /api/concerns/mine` (fetch by id-list). Burger-view `/burger/mijn-zorgen` met localStorage-IDs (`samenspraak.submissions.v1`). Gemeente-dashboard krijgt sectie "Recente burger-inzendingen" met filter-chips + status-knoppen + optimistic UI.
 
-**Niet bouwen** (ook in Phase 3 niet): auth, magic links, e-mail, multi-language, speech, kaarten, realtime updates, developer-perspectief, vrije tekst-antwoorden van gemeente, Claude-gegenereerde reacties, cross-device burger-view, productie-veilige kolom-RLS.
+**Phase 4 (af)** — CEO review cherry-picks die de loop visueel sluiten:
+1. **Antwoord-threading** — `published_reports` tabel + `POST /api/reports/publish` + `lib/data/published-reports.ts`. `/api/concerns/mine` verrijkt elke `answered` concern met `verslagAnswer` (B1-uitleg uit het laatste verslag, gematcht op categorie via `CATEGORY_LABEL_NL`). Burger ziet moss-getint antwoordkaartje onder de status-badge met ref `SP-2026-XXXX`.
+2. **Homepage 3-staps participatie-cyclus** — Bewoner / AI / Gemeente boven de CTAs.
+3. **Urgentie-pil op ernst** — `severityTone()` in `RecenteInzendingen.tsx`: 1–2 moss, 3 amber, 4–5 rose.
+4. **Onderteken & publiceer mock modal** — `MotiveringPanel.tsx` modal met OFFICIËLE PUBLICATIE-tekst, "Annuleer" + "Bevestig & publiceer". Op bevestig: POST publish, knop wordt "Gepubliceerd op {datum} · ref. {nr}". Auto-flipt alle `db` concerns met `status != 'answered'` → `answered`.
+
+**Niet bouwen** (ook in Phase 4 niet): auth, magic links, e-mail, multi-language, speech, kaarten, realtime updates, developer-perspectief, vrije tekst-antwoorden van gemeente, Claude-gegenereerde reacties, cross-device burger-view, productie-veilige kolom-RLS, snapshot-per-concern (verslag-join is altijd "laatste verslag wint").
 
 ## Architectuur-regels (hard)
 
@@ -66,8 +72,8 @@ Supabase-toegang draait op de **anon key** + RLS policies: anon mag INSERT en SE
 
 Naast deze AGENTS.md staan er per werkgebied submap-`CLAUDE.md` files met specifieke regels. Claude Code laadt ze automatisch zodra je in die submap werkt:
 
-- `lib/CLAUDE.md` — Persoon A: data-adapter (seed + Supabase) + Claude SDK patroon + status helpers
-- `app/api/CLAUDE.md` — Persoon A: route handler conventies (Next 16) — `/api/motivering`, `/api/concerns`, `/api/concerns/[id]`, `/api/concerns/mine`, `/api/pdok`
+- `lib/CLAUDE.md` — Persoon A: data-adapter (seed + Supabase) + Claude SDK patroon + status helpers + published-reports adapter
+- `app/api/CLAUDE.md` — Persoon A: route handler conventies (Next 16) — `/api/motivering`, `/api/concerns`, `/api/concerns/[id]`, `/api/concerns/mine`, `/api/pdok`, `/api/reports/publish`
 - `app/gemeente/CLAUDE.md` — Persoon B: Server/Client split + dashboard regels + RecenteInzendingen
 - `app/burger/CLAUDE.md` — Persoon B: 3-stappen wizard, persona-default, /mijn-zorgen view, localStorage
 - `data/CLAUDE.md` — Persoon B: shape, aantallen, schrijfregels voor seeded data en fallback

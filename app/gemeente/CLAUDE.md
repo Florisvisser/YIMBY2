@@ -6,8 +6,9 @@ Lees eerst `/AGENTS.md` voor project-regels. Hier staat alleen wat specifiek voo
 
 ```
 app/gemeente/
-  page.tsx              Server Component — laadt concerns, rendert dashboard + cards
-  MotiveringPanel.tsx   "use client" — knop + report rendering + state
+  page.tsx                Server Component — laadt concerns, rendert dashboard + cards
+  MotiveringPanel.tsx     "use client" — Genereer-knop + report + Onderteken & publiceer modal
+  RecenteInzendingen.tsx  "use client" — filter-chips, status-mutatie knoppen, urgentie-pil op ernst
 ```
 
 ## Server vs Client
@@ -75,6 +76,25 @@ Volg shape uit `lib/data/types.ts` (`MotiveringReport`). Vier secties, elk met:
 - Review-warnings (lijst, in oranje als niet-leeg)
 
 Status-badge bovenaan: `"Concept — ambtelijke review vereist"` — vet, in oranje of geel.
+
+## "Onderteken & publiceer" — Phase 4
+
+Knop opent een mock modal (`role="dialog"`, `aria-modal="true"`) met:
+- Subkop "OFFICIËLE PUBLICATIE"
+- Tekst "Dit verslag wordt gepubliceerd als officieel participatierapport voor Schapenweide. Bewoners zien hierna het antwoord op hun zienswijze."
+- Referentienummer-placeholder `SP-2026-…`
+- "Annuleer" + "Bevestig & publiceer" knoppen
+
+Op bevestig: `POST /api/reports/publish` met de huidige `report`. `useRef`-flag (`publishInFlight`) + `disabled` tijdens in-flight; bij 5xx re-enabled de knop zodat retry mogelijk is. Op success: knop wordt vervangen door "Gepubliceerd op {datum} · ref. {SP-2026-XXXX}" (moss-groen, niet-actief). De publish-route flipt server-side álle `db` concerns naar `answered`, dus refresh van `/gemeente` toont alle "Recente inzendingen" als beantwoord.
+
+## Recente inzendingen — urgentie-pil (Phase 4)
+
+`severityTone(severity)` in `RecenteInzendingen.tsx` mapt ernst naar kleur:
+- 1–2 → moss (rustig)
+- 3 → amber (aandacht)
+- 4–5 → rose (urgent)
+
+Pil staat bij de "ernst N/5"-tekst in de meta-regel; is een visueel signaal voor de scannende ambtenaar, niet semantisch leidend.
 
 ## Styling
 
