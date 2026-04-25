@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   PERSONA_LABEL_NL,
@@ -9,7 +9,16 @@ import {
   type ConcernCategory,
   type PersonaType,
 } from "@/lib/data/types";
+import type { ThemaAnalyse } from "@/lib/thema-analyse/schema";
 import { severityTone } from "./severity-utils";
+
+function SparkIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1" />
+    </svg>
+  );
+}
 
 function CloseIcon() {
   return (
@@ -202,6 +211,42 @@ function ThemaModal({
     return () => document.removeEventListener("keydown", handler);
   }, [onClose]);
 
+  const [analyse, setAnalyse] = useState<ThemaAnalyse | null>(null);
+  const [analyseLoading, setAnalyseLoading] = useState(false);
+  const [analyseError, setAnalyseError] = useState<string | null>(null);
+  const analyseInFlight = useRef(false);
+
+  async function handleAnalyse() {
+    if (analyseInFlight.current || concerns.length === 0) return;
+    analyseInFlight.current = true;
+    setAnalyseError(null);
+    setAnalyseLoading(true);
+    try {
+      const res = await fetch("/api/thema-analyse", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          category: stat.category,
+          concerns: concerns.map((c) => ({
+            id: c.id,
+            category: c.category,
+            severity: c.severity,
+            concernText: c.concernText,
+            neighbourhood: c.neighbourhood,
+            streetReference: c.streetReference,
+          })),
+        }),
+      });
+      const data = (await res.json()) as ThemaAnalyse;
+      setAnalyse(data);
+    } catch {
+      setAnalyseError("Analyse niet beschikbaar. Probeer opnieuw.");
+    } finally {
+      setAnalyseLoading(false);
+      analyseInFlight.current = false;
+    }
+  }
+
   const severityCounts: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
   for (const c of concerns) severityCounts[c.severity] = (severityCounts[c.severity] ?? 0) + 1;
   const maxSevCount = Math.max(...Object.values(severityCounts), 1);
@@ -334,6 +379,178 @@ function ThemaModal({
           </p>
         ) : (
           <>
+            {/* AI-analyse */}
+            <section
+              style={{
+                background: "var(--moss-50)",
+                borderRadius: "var(--radius-lg)",
+                padding: 18,
+                display: "flex",
+                flexDirection: "column",
+                gap: 12,
+              }}
+            >
+              <SectionLabel>AI-analyse van pijnpunten</SectionLabel>
+              {!analyse && !analyseLoading && (
+                <>
+                  <p style={{ margin: 0, fontSize: 13, color: "var(--fg-secondary)", lineHeight: 1.55 }}>
+                    Laat AI de kern destilleren uit deze {concerns.length} zienswijzen — samenvatting, pijnpunten en aandachtspunten voor jouw afweging.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleAnalyse}
+                    style={{
+                      alignSelf: "flex-start",
+                      padding: "9px 16px",
+                      borderRadius: "var(--radius-md)",
+                      background: "var(--moss-500)",
+                      color: "var(--paper-50)",
+                      border: "none",
+                      fontFamily: "var(--font-sans)",
+                      fontSize: 13,
+                      fontWeight: 500,
+                      cursor: "pointer",
+                      boxShadow: "var(--shadow-sm)",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 6,
+                    }}
+                  >
+                    <SparkIcon />
+                    Analyseer met AI
+                  </button>
+                </>
+              )}
+              {analyseLoading && (
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {[60, 90, 75, 50].map((w, i) => (
+                    <div
+                      key={i}
+                      style={{
+                        height: 12,
+                        width: `${w}%`,
+                        borderRadius: "var(--radius-sm)",
+                        background: "var(--paper-100)",
+                        overflow: "hidden",
+                        position: "relative",
+                      }}
+                    >
+                      <div
+                        style={{
+                          position: "absolute",
+                          inset: 0,
+                          backgroundImage:
+                            "linear-gradient(90deg, transparent 0%, var(--paper-0) 50%, transparent 100%)",
+                          backgroundSize: "200% 100%",
+                          animation: "shimmer 1.4s infinite",
+                        }}
+                      />
+                    </div>
+                  ))}
+                  <p style={{ margin: "4px 0 0 0", fontSize: 12, color: "var(--fg-muted)" }}>
+                    Analyseert {concerns.length} zienswijzen…
+                  </p>
+                </div>
+              )}
+              {analyseError && (
+                <p style={{ margin: 0, fontSize: 13, color: "var(--rose-500)" }}>
+                  {analyseError}
+                </p>
+              )}
+              {analyse && !analyseLoading && (
+                <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                  <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6, color: "var(--ink-700)" }}>
+                    {analyse.samenvatting}
+                  </p>
+                  <div>
+                    <div
+                      style={{
+                        fontSize: 10,
+                        fontWeight: 500,
+                        textTransform: "uppercase",
+                        letterSpacing: "0.12em",
+                        color: "var(--moss-700)",
+                        marginBottom: 6,
+                      }}
+                    >
+                      Pijnpunten
+                    </div>
+                    <ul
+                      style={{
+                        margin: 0,
+                        padding: 0,
+                        listStyle: "none",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 6,
+                      }}
+                    >
+                      {analyse.pijnpunten.map((p, i) => (
+                        <li
+                          key={i}
+                          style={{
+                            display: "flex",
+                            gap: 8,
+                            fontSize: 13,
+                            lineHeight: 1.55,
+                            color: "var(--fg-secondary)",
+                          }}
+                        >
+                          <span style={{ color: "var(--rose-400)", flexShrink: 0, lineHeight: 1.55 }}>•</span>
+                          <span>{p}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div>
+                    <div
+                      style={{
+                        fontSize: 10,
+                        fontWeight: 500,
+                        textTransform: "uppercase",
+                        letterSpacing: "0.12em",
+                        color: "var(--moss-700)",
+                        marginBottom: 6,
+                      }}
+                    >
+                      Aandachtspunten voor afweging
+                    </div>
+                    <ul
+                      style={{
+                        margin: 0,
+                        padding: 0,
+                        listStyle: "none",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 6,
+                      }}
+                    >
+                      {analyse.keyTakeaways.map((t, i) => (
+                        <li
+                          key={i}
+                          style={{
+                            display: "flex",
+                            gap: 8,
+                            fontSize: 13,
+                            lineHeight: 1.55,
+                            color: "var(--fg-secondary)",
+                          }}
+                        >
+                          <span style={{ color: "var(--moss-500)", flexShrink: 0, lineHeight: 1.55 }}>→</span>
+                          <span>{t}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  {analyse.source === "fallback" && (
+                    <p style={{ margin: 0, fontSize: 11, color: "var(--fg-muted)", fontStyle: "italic" }}>
+                      Algemene analyse (Claude tijdelijk niet beschikbaar)
+                    </p>
+                  )}
+                </div>
+              )}
+            </section>
+
             {/* Severity distribution */}
             <section>
               <SectionLabel>Verdeling ernst</SectionLabel>
