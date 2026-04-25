@@ -1,25 +1,66 @@
 import BurgerForm from "./BurgerForm";
 
+function SamenspraakMark() {
+  return (
+    <svg width="28" height="18" viewBox="0 0 56 32" aria-hidden="true">
+      <circle cx="20" cy="16" r="13" fill="#406A2C" />
+      <circle cx="36" cy="16" r="13" fill="none" stroke="#1A1612" strokeWidth="2" />
+      <path d="M12 24 L9 30 L17 26 Z" fill="#406A2C" />
+    </svg>
+  );
+}
+
 export default function BurgerPage() {
   return (
-    <main className="min-h-screen bg-neutral-50 py-12 px-6">
-      <div className="max-w-2xl mx-auto space-y-8">
-        <header className="space-y-2">
-          <p className="text-xs uppercase tracking-widest text-neutral-400">
-            Schapenweide · Bilthoven
-          </p>
-          <h1 className="text-3xl font-semibold tracking-tight text-neutral-900">
-            Geef je zienswijze
-          </h1>
-          <p className="text-neutral-600 text-sm leading-relaxed">
-            Vul je adres in, kies een thema en beschrijf je zorg over het plan
-            Schapenweide. De gemeente krijgt jouw inbreng als onderdeel van het
-            participatieverslag.
-          </p>
-        </header>
+    <div style={{ minHeight: "100vh", background: "var(--paper-50)", display: "flex", flexDirection: "column", fontFamily: "var(--font-sans)" }}>
+      {/* Header */}
+      <header style={{
+        padding: "20px 24px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        borderBottom: "1px solid var(--border-soft)",
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <SamenspraakMark />
+          <span style={{
+            fontFamily: "var(--font-display)",
+            fontSize: 20,
+            fontWeight: 500,
+            color: "var(--ink-900)",
+            fontVariationSettings: "'opsz' 144, 'SOFT' 50",
+            letterSpacing: "-0.01em",
+          }}>
+            Samenspraak
+          </span>
+        </div>
+        <span style={{
+          fontFamily: "var(--font-mono)",
+          fontSize: 11,
+          color: "var(--fg-muted)",
+          letterSpacing: "0.06em",
+        }}>
+          NL · TR · AR · PL · EN
+        </span>
+      </header>
 
-        <BurgerForm />
-      </div>
-    </main>
+      {/* Content */}
+      <main style={{ flex: 1, display: "flex", justifyContent: "center", padding: "48px 24px" }}>
+        <div style={{ width: "100%", maxWidth: 480 }}>
+          <BurgerForm />
+        </div>
+      </main>
+
+      {/* Footer */}
+      <footer style={{
+        padding: "20px 24px",
+        textAlign: "center",
+        fontSize: 12,
+        color: "var(--fg-muted)",
+        borderTop: "1px solid var(--border-soft)",
+      }}>
+        Concept-demo · Geen persoonsgegevens worden opgeslagen.
+      </footer>
+    </div>
   );
 }

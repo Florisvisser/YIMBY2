@@ -22,6 +22,32 @@ interface MotiveringReport {
   sections: ReportSection[];
 }
 
+function WarnIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+      <path d="M10.3 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.7 3.86a2 2 0 0 0-3.39 0z"/>
+      <line x1="12" y1="9" x2="12" y2="13"/>
+      <line x1="12" y1="17" x2="12.01" y2="17"/>
+    </svg>
+  );
+}
+
+function SparkIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/>
+    </svg>
+  );
+}
+
+function CheckIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="20 6 9 17 4 12"/>
+    </svg>
+  );
+}
+
 export default function MotiveringPanel() {
   const [loading, setLoading] = useState(false);
   const [report, setReport] = useState<MotiveringReport | null>(null);
@@ -50,130 +76,300 @@ export default function MotiveringPanel() {
   };
 
   return (
-    <div className="space-y-8">
-      <div className="flex items-center gap-4">
-        <button
-          onClick={handleClick}
-          disabled={loading}
-          className="rounded-lg bg-neutral-900 text-white px-6 py-3 font-medium hover:bg-neutral-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {loading ? "Verslag wordt gegenereerd…" : "Genereer verslag"}
-        </button>
-        {loading && (
-          <p className="text-sm text-neutral-400">
-            Dit duurt ongeveer 60–90 seconden.
+    <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+      {/* Generate panel */}
+      {!report && (
+        <div style={{
+          background: "var(--paper-0)",
+          borderRadius: "var(--radius-xl)",
+          padding: 28,
+          boxShadow: "var(--shadow-sm), var(--shadow-hairline)",
+          display: "flex",
+          flexDirection: "column",
+          gap: 16,
+        }}>
+          <div style={{ fontSize: 11, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.18em", color: "var(--fg-tertiary)" }}>
+            AI-motivering
+          </div>
+          <h2 style={{
+            margin: 0,
+            fontFamily: "var(--font-display)",
+            fontSize: 28,
+            fontWeight: 500,
+            letterSpacing: "-0.02em",
+            color: "var(--ink-900)",
+            fontVariationSettings: "'opsz' 144, 'SOFT' 50",
+          }}>
+            Genereer een concept-verslag uit alle zienswijzen
+          </h2>
+          <p style={{ margin: 0, fontSize: 14.5, lineHeight: 1.6, color: "var(--fg-secondary)", maxWidth: 640 }}>
+            Eén Claude-call. Per thema een ambtelijke motivering, een B1-uitleg voor bewoners, en concrete review-aandachtspunten. U reviewt en ondertekent.
           </p>
-        )}
-      </div>
 
-      {error && (
-        <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-3">
-          {error}
-        </p>
+          <button
+            onClick={handleClick}
+            disabled={loading}
+            style={{
+              alignSelf: "flex-start",
+              padding: "14px 22px",
+              borderRadius: "var(--radius-md)",
+              background: loading ? "var(--moss-600)" : "var(--moss-500)",
+              color: "var(--paper-50)",
+              border: "none",
+              fontFamily: "var(--font-sans)",
+              fontSize: 15,
+              fontWeight: 500,
+              cursor: loading ? "wait" : "pointer",
+              boxShadow: "var(--shadow-sm)",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              position: "relative",
+              overflow: "hidden",
+              minWidth: 240,
+              transition: `background var(--dur-fast) var(--ease-out)`,
+            }}
+          >
+            <SparkIcon />
+            {loading ? "Verslag wordt gegenereerd…" : "Genereer concept-verslag"}
+            {loading && (
+              <span style={{
+                position: "absolute",
+                inset: 0,
+                background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent)",
+                animation: "shimmer 1.4s linear infinite",
+              }} />
+            )}
+          </button>
+
+          {loading && (
+            <p style={{ margin: 0, fontSize: 13, color: "var(--fg-muted)" }}>
+              Dit duurt ongeveer 60–90 seconden.
+            </p>
+          )}
+        </div>
       )}
 
+      {/* Error */}
+      {error && (
+        <div style={{
+          background: "var(--rose-50)",
+          borderRadius: "var(--radius-md)",
+          padding: "12px 16px",
+          fontSize: 14,
+          color: "var(--rose-500)",
+          display: "flex",
+          gap: 8,
+          alignItems: "flex-start",
+        }}>
+          <WarnIcon />
+          {error}
+        </div>
+      )}
+
+      {/* Report */}
       {report && (
-        <div className="space-y-6">
-          <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div style={{
+          background: "var(--paper-0)",
+          borderRadius: "var(--radius-xl)",
+          padding: 28,
+          boxShadow: "var(--shadow-md), var(--shadow-hairline)",
+          display: "flex",
+          flexDirection: "column",
+          gap: 20,
+        }}>
+          {/* Report header */}
+          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
             <div>
-              <h2 className="text-xl font-semibold text-neutral-900">
+              <div style={{ fontSize: 11, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.18em", color: "var(--fg-tertiary)", marginBottom: 8 }}>
+                Concept-participatieverslag
+              </div>
+              <h2 style={{
+                margin: 0,
+                fontFamily: "var(--font-display)",
+                fontSize: 30,
+                fontWeight: 500,
+                letterSpacing: "-0.02em",
+                color: "var(--ink-900)",
+                fontVariationSettings: "'opsz' 144, 'SOFT' 50",
+              }}>
                 {report.title}
               </h2>
-              <p className="text-sm text-neutral-400 mt-1">
+              <p style={{ margin: "6px 0 0 0", fontSize: 13, color: "var(--fg-muted)", fontFamily: "var(--font-mono)", fontVariantNumeric: "tabular-nums" }}>
                 Gegenereerd op{" "}
                 {new Date(report.generatedAt).toLocaleString("nl-NL", {
-                  day: "numeric",
-                  month: "long",
-                  year: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
+                  day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit",
                 })}
                 {report.source === "fallback" && " · concept-fallback"}
               </p>
             </div>
-            <span className="shrink-0 text-sm font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-3 py-1.5">
+            <span style={{
+              fontSize: 12,
+              fontWeight: 500,
+              padding: "6px 12px",
+              borderRadius: "var(--radius-full)",
+              background: "var(--amber-50)",
+              color: "var(--amber-500)",
+              boxShadow: "var(--shadow-hairline)",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              flexShrink: 0,
+            }}>
+              <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--amber-300)", display: "inline-block" }} />
               {report.status}
             </span>
           </div>
 
-          <p className="text-neutral-600 leading-relaxed">{report.summary}</p>
+          {/* Summary */}
+          <p style={{ margin: 0, fontSize: 15, lineHeight: 1.65, color: "var(--fg-secondary)" }}>
+            {report.summary}
+          </p>
 
-          <div className="space-y-6">
+          {/* Sections */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             {report.sections.map((section) => (
-              <div
-                key={section.category}
-                className="bg-white border border-neutral-200 rounded-lg p-6 space-y-5"
-              >
-                <div className="flex items-start justify-between gap-4 flex-wrap">
-                  <h3 className="text-lg font-semibold text-neutral-900">
+              <div key={section.category} style={{
+                background: "var(--paper-50)",
+                borderRadius: "var(--radius-lg)",
+                padding: 20,
+                display: "flex",
+                flexDirection: "column",
+                gap: 14,
+              }}>
+                {/* Section header */}
+                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+                  <h3 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: "var(--ink-900)" }}>
                     {section.category}
                   </h3>
-                  <div className="text-sm text-neutral-500 shrink-0">
-                    {section.concernCount} zienswijzen ·{" "}
-                    <span className="font-medium text-neutral-700">
-                      ernst {section.severityAverage.toFixed(1)} / 5
-                    </span>
-                  </div>
+                  <span style={{ fontSize: 12, color: "var(--fg-tertiary)", fontFamily: "var(--font-mono)", fontVariantNumeric: "tabular-nums", flexShrink: 0 }}>
+                    {section.concernCount} zienswijzen · ernst {section.severityAverage.toFixed(1)} / 5
+                  </span>
                 </div>
 
-                <div className="space-y-4 text-sm">
+                {/* Ambtelijke motivering */}
+                <div style={{ display: "flex", gap: 12 }}>
+                  <div style={{ width: 3, background: "var(--ink-900)", borderRadius: 2, flexShrink: 0 }} />
                   <div>
-                    <p className="text-xs uppercase tracking-wider text-neutral-400 mb-1">
+                    <div style={{ fontSize: 10, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.12em", color: "var(--ink-600)", marginBottom: 6 }}>
                       Ambtelijke motivering
-                    </p>
-                    <p className="text-neutral-700 leading-relaxed">
+                    </div>
+                    <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6, color: "var(--fg-secondary)" }}>
                       {section.officialMotivation}
                     </p>
                   </div>
+                </div>
 
+                {/* Bewoners uitleg */}
+                <div style={{ display: "flex", gap: 12 }}>
+                  <div style={{ width: 3, background: "var(--clay-400)", borderRadius: 2, flexShrink: 0 }} />
                   <div>
-                    <p className="text-xs uppercase tracking-wider text-neutral-400 mb-1">
+                    <div style={{ fontSize: 10, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.12em", color: "var(--clay-500)", marginBottom: 6 }}>
                       Uitleg voor bewoners
-                    </p>
-                    <p className="text-neutral-700 leading-relaxed">
+                    </div>
+                    <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6, color: "var(--fg-secondary)" }}>
                       {section.residentExplanation}
                     </p>
                   </div>
-
-                  <div>
-                    <p className="text-xs uppercase tracking-wider text-neutral-400 mb-1">
-                      Voorgestelde aanpassing
-                    </p>
-                    <p className="text-neutral-700 leading-relaxed">
-                      {section.suggestedPlanAdjustment}
-                    </p>
-                  </div>
-
-                  <div>
-                    <p className="text-xs uppercase tracking-wider text-neutral-400 mb-1">
-                      Onderbouwing
-                    </p>
-                    <p className="text-neutral-600 leading-relaxed italic">
-                      {section.evidenceSummary}
-                    </p>
-                  </div>
-
-                  {section.reviewWarnings.length > 0 && (
-                    <div>
-                      <p className="text-xs uppercase tracking-wider text-amber-600 mb-2">
-                        Aandachtspunten voor review
-                      </p>
-                      <ul className="space-y-1">
-                        {section.reviewWarnings.map((warning, i) => (
-                          <li
-                            key={i}
-                            className="flex gap-2 text-amber-700 bg-amber-50 rounded px-3 py-1.5"
-                          >
-                            <span className="shrink-0">⚠</span>
-                            <span>{warning}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
                 </div>
+
+                {/* Voorgestelde aanpassing */}
+                {section.suggestedPlanAdjustment && (
+                  <div style={{ display: "flex", gap: 12 }}>
+                    <div style={{ width: 3, background: "var(--sky-400)", borderRadius: 2, flexShrink: 0 }} />
+                    <div>
+                      <div style={{ fontSize: 10, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.12em", color: "var(--sky-500)", marginBottom: 6 }}>
+                        Voorgestelde aanpassing
+                      </div>
+                      <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6, color: "var(--fg-secondary)" }}>
+                        {section.suggestedPlanAdjustment}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Onderbouwing */}
+                {section.evidenceSummary && (
+                  <div style={{ padding: "10px 14px", borderRadius: "var(--radius-sm)", background: "var(--paper-100)", fontSize: 13, lineHeight: 1.55, color: "var(--fg-tertiary)", fontStyle: "italic" }}>
+                    {section.evidenceSummary}
+                  </div>
+                )}
+
+                {/* Review warnings */}
+                {section.reviewWarnings.length > 0 && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                    {section.reviewWarnings.map((warning, i) => (
+                      <div key={i} style={{
+                        background: "var(--amber-50)",
+                        borderRadius: "var(--radius-sm)",
+                        padding: "10px 12px",
+                        display: "flex",
+                        gap: 10,
+                        alignItems: "flex-start",
+                        color: "var(--amber-500)",
+                        fontSize: 13,
+                        lineHeight: 1.5,
+                      }}>
+                        <WarnIcon />
+                        <span>{warning}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
+          </div>
+
+          {/* Action buttons */}
+          <div style={{ display: "flex", gap: 10, marginTop: 4, flexWrap: "wrap" }}>
+            <button style={{
+              padding: "12px 20px",
+              borderRadius: "var(--radius-md)",
+              background: "var(--moss-500)",
+              color: "var(--paper-50)",
+              border: "none",
+              fontFamily: "var(--font-sans)",
+              fontSize: 14,
+              fontWeight: 500,
+              cursor: "pointer",
+              boxShadow: "var(--shadow-sm)",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+            }}>
+              <CheckIcon />
+              Onderteken &amp; publiceer
+            </button>
+            <button style={{
+              padding: "12px 20px",
+              borderRadius: "var(--radius-md)",
+              background: "var(--paper-0)",
+              color: "var(--ink-900)",
+              border: "none",
+              fontFamily: "var(--font-sans)",
+              fontSize: 14,
+              fontWeight: 500,
+              cursor: "pointer",
+              boxShadow: "var(--shadow-sm), var(--shadow-hairline)",
+            }}>
+              Bewerken
+            </button>
+            <button
+              onClick={() => { setReport(null); setError(null); }}
+              style={{
+                padding: "12px 20px",
+                borderRadius: "var(--radius-md)",
+                background: "transparent",
+                color: "var(--fg-secondary)",
+                border: "none",
+                cursor: "pointer",
+                fontFamily: "var(--font-sans)",
+                fontSize: 14,
+                fontWeight: 500,
+              }}
+            >
+              Opnieuw genereren
+            </button>
           </div>
         </div>
       )}
