@@ -47,3 +47,12 @@ Voor je `app/`, `route.ts`, of metadata aanraakt: open `node_modules/next/dist/d
 - **Persoon B** = `data/*.json`, `app/page.tsx`, `app/gemeente/page.tsx`, `app/layout.tsx`.
 
 Raak elkaars files niet aan zonder overleg. Gedeelde files (`package.json`, `globals.css`, deze MD's) alleen tijdens gezamenlijke sessies.
+
+## Per-map agent-instructies
+
+Naast deze AGENTS.md staan er per werkgebied submap-`CLAUDE.md` files met specifieke regels. Claude Code laadt ze automatisch zodra je in die submap werkt:
+
+- `lib/CLAUDE.md` — Persoon A: data-adapter + Claude SDK patroon
+- `app/api/CLAUDE.md` — Persoon A: route handler conventies (Next 16)
+- `app/gemeente/CLAUDE.md` — Persoon B: Server/Client split + dashboard regels
+- `data/CLAUDE.md` — Persoon B: shape, aantallen, schrijfregels voor seeded data en fallback
