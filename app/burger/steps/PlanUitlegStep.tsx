@@ -79,78 +79,46 @@ function ChevronIcon({ down }: { down: boolean }) {
   );
 }
 
-function SchapenweideSchematic() {
-  return (
-    <svg
-      viewBox="0 0 280 200"
-      width="100%"
-      style={{ borderRadius: "var(--radius-lg)", boxShadow: "var(--shadow-sm)" }}
-      aria-label="Schematisch overzicht Schapenweide ontwikkelgebied"
-    >
-      <rect width="280" height="200" fill="#FAF6EC" rx="8" />
+const SCHAPENWEIDE_LAT = 52.126;
+const SCHAPENWEIDE_LON = 5.195;
 
-      {/* Roads */}
-      <rect x="0" y="90" width="280" height="14" fill="#D6CFB8" />
-      <rect x="125" y="0" width="14" height="200" fill="#D6CFB8" />
+function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371;
+  const toRad = (x: number) => (x * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(a));
+}
 
-      {/* Green areas */}
-      <rect x="10" y="10" width="55" height="70" fill="#C8DEB4" rx="4" />
-      <rect x="155" y="115" width="55" height="70" fill="#C8DEB4" rx="4" />
-      <rect x="220" y="10" width="50" height="40" fill="#C8DEB4" rx="4" />
-
-      {/* Building blocks */}
-      <rect x="75" y="10" width="40" height="30" fill="#406A2C" rx="3" opacity="0.7" />
-      <rect x="75" y="48" width="40" height="32" fill="#406A2C" rx="3" opacity="0.55" />
-      <rect x="155" y="10" width="55" height="30" fill="#406A2C" rx="3" opacity="0.7" />
-      <rect x="155" y="48" width="55" height="32" fill="#406A2C" rx="3" opacity="0.55" />
-      <rect x="10" y="115" width="55" height="70" fill="#406A2C" rx="3" opacity="0.6" />
-      <rect x="75" y="115" width="40" height="30" fill="#406A2C" rx="3" opacity="0.7" />
-      <rect x="75" y="153" width="40" height="32" fill="#406A2C" rx="3" opacity="0.55" />
-      <rect x="220" y="60" width="50" height="125" fill="#406A2C" rx="3" opacity="0.6" />
-
-      {/* Road labels */}
-      <text x="60" y="100" fontSize="8" fill="#8C8070" textAnchor="middle" fontFamily="monospace">
-        Emmalaan
-      </text>
-      <text
-        x="132"
-        y="55"
-        fontSize="8"
-        fill="#8C8070"
-        textAnchor="middle"
-        fontFamily="monospace"
-        transform="rotate(90, 132, 55)"
-      >
-        Nachtegaallaan
-      </text>
-
-      {/* Legend */}
-      <rect x="10" y="178" width="9" height="9" fill="#406A2C" rx="1" opacity="0.65" />
-      <text x="23" y="186" fontSize="8" fill="#5C5040" fontFamily="monospace">
-        bebouwing
-      </text>
-      <rect x="85" y="178" width="9" height="9" fill="#C8DEB4" rx="1" />
-      <text x="98" y="186" fontSize="8" fill="#5C5040" fontFamily="monospace">
-        groen
-      </text>
-
-      {/* Footer label */}
-      <text x="140" y="197" fontSize="7.5" fill="#8C8070" textAnchor="middle" fontFamily="monospace">
-        Schapenweide · schematisch · niet op schaal
-      </text>
-    </svg>
-  );
+function bearingLabel(lat1: number, lon1: number, lat2: number, lon2: number): string {
+  const toRad = (x: number) => (x * Math.PI) / 180;
+  const toDeg = (x: number) => (x * 180) / Math.PI;
+  const dLon = toRad(lon2 - lon1);
+  const y = Math.sin(dLon) * Math.cos(toRad(lat2));
+  const x =
+    Math.cos(toRad(lat1)) * Math.sin(toRad(lat2)) -
+    Math.sin(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.cos(dLon);
+  const brng = (toDeg(Math.atan2(y, x)) + 360) % 360;
+  const dirs = ["noord", "noord-oost", "oost", "zuid-oost", "zuid", "zuid-west", "west", "noord-west"];
+  return dirs[Math.round(brng / 45) % 8];
 }
 
 export default function PlanUitlegStep({
   planUitleg,
   voornaam,
+  userLat,
+  userLon,
   onVraag,
   onZorg,
   onGeen,
 }: {
   planUitleg: PlanUitlegReport;
   voornaam: string;
+  userLat?: number;
+  userLon?: number;
   onVraag: () => void;
   onZorg: () => void;
   onGeen: () => void;
@@ -499,43 +467,139 @@ export default function PlanUitlegStep({
         >
           Locatie
         </p>
-        <iframe
-          title="Schapenweide locatie"
-          src="https://www.openstreetmap.org/export/embed.html?bbox=5.175%2C52.118%2C5.215%2C52.134&layer=mapnik&marker=52.126%2C5.195"
-          style={{
-            width: "100%",
-            aspectRatio: "4/3",
-            border: "none",
-            borderRadius: "var(--radius-lg)",
-            boxShadow: "var(--shadow-md)",
-          }}
-          loading="lazy"
-        />
-        <a
-          href="https://www.openstreetmap.org/?mlat=52.126&mlon=5.195#map=15/52.126/5.195"
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{ fontSize: 11, color: "var(--fg-muted)", textDecoration: "underline" }}
-        >
-          Vergroot kaart
-        </a>
+        {(() => {
+          const hasUser = typeof userLat === "number" && typeof userLon === "number";
+          const markerLat = hasUser ? (userLat as number) : SCHAPENWEIDE_LAT;
+          const markerLon = hasUser ? (userLon as number) : SCHAPENWEIDE_LON;
+          const minLat = Math.min(markerLat, SCHAPENWEIDE_LAT) - 0.005;
+          const maxLat = Math.max(markerLat, SCHAPENWEIDE_LAT) + 0.005;
+          const minLon = Math.min(markerLon, SCHAPENWEIDE_LON) - 0.005;
+          const maxLon = Math.max(markerLon, SCHAPENWEIDE_LON) + 0.005;
+          const embedSrc = `https://www.openstreetmap.org/export/embed.html?bbox=${minLon}%2C${minLat}%2C${maxLon}%2C${maxLat}&layer=mapnik&marker=${markerLat}%2C${markerLon}`;
+          const fullUrl = `https://www.openstreetmap.org/?mlat=${markerLat}&mlon=${markerLon}#map=15/${markerLat}/${markerLon}`;
+          const distanceKm = hasUser
+            ? haversineKm(markerLat, markerLon, SCHAPENWEIDE_LAT, SCHAPENWEIDE_LON)
+            : 0;
+          const direction = hasUser
+            ? bearingLabel(markerLat, markerLon, SCHAPENWEIDE_LAT, SCHAPENWEIDE_LON)
+            : "";
+          return (
+            <>
+              <iframe
+                title="Locatie"
+                src={embedSrc}
+                style={{
+                  width: "100%",
+                  aspectRatio: "4/3",
+                  border: "none",
+                  borderRadius: "var(--radius-lg)",
+                  boxShadow: "var(--shadow-md)",
+                }}
+                loading="lazy"
+              />
+              {hasUser && distanceKm > 0.05 ? (
+                <p style={{ fontSize: 12, color: "var(--fg-muted)", margin: 0 }}>
+                  📍 Jouw adres · plangebied Schapenweide ligt {distanceKm.toFixed(1)} km {direction}
+                </p>
+              ) : (
+                <p style={{ fontSize: 12, color: "var(--fg-muted)", margin: 0 }}>
+                  📍 Plangebied Schapenweide
+                </p>
+              )}
+              <a
+                href={fullUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ fontSize: 11, color: "var(--fg-muted)", textDecoration: "underline" }}
+              >
+                Vergroot kaart
+              </a>
+            </>
+          );
+        })()}
 
-        <div style={{ marginTop: 8 }}>
-          <p
+        <OmgevingsvisieFigure />
+      </div>
+    </div>
+  );
+}
+
+function OmgevingsvisieFigure() {
+  const [tab, setTab] = useState<"plankaart" | "luchtfoto">("plankaart");
+  const sources: Record<typeof tab, { src: string; alt: string; caption: string }> = {
+    plankaart: {
+      src: "/schapenweide/plankaart-toekomstige-situatie.jpg",
+      alt: "Plankaart toekomstige situatie gemeente De Bilt met Schapenweide gemarkeerd",
+      caption: "Toekomstige situatie · regio De Bilt met Schapenweide gemarkeerd",
+    },
+    luchtfoto: {
+      src: "/schapenweide/luchtfoto-terrein.jpg",
+      alt: "Luchtfoto van het Schapenweide-terrein in de huidige situatie",
+      caption: "Huidige situatie · luchtfoto Schapenweide-terrein",
+    },
+  };
+  const active = sources[tab];
+
+  return (
+    <div style={{ marginTop: 8 }}>
+      <p
+        style={{
+          fontSize: 12,
+          fontWeight: 500,
+          textTransform: "uppercase",
+          letterSpacing: "0.1em",
+          color: "var(--fg-tertiary)",
+          margin: "0 0 10px 0",
+        }}
+      >
+        Ontwikkelgebied Schapenweide
+      </p>
+      <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
+        {(["plankaart", "luchtfoto"] as const).map((t) => (
+          <button
+            key={t}
+            type="button"
+            onClick={() => setTab(t)}
             style={{
+              padding: "6px 12px",
               fontSize: 12,
-              fontWeight: 500,
-              textTransform: "uppercase",
-              letterSpacing: "0.1em",
-              color: "var(--fg-tertiary)",
-              margin: "0 0 10px 0",
+              fontFamily: "var(--font-sans)",
+              borderRadius: "var(--radius-full)",
+              border: "1px solid",
+              borderColor: tab === t ? "var(--moss-500)" : "var(--border-medium)",
+              background: tab === t ? "var(--moss-50)" : "var(--paper-0)",
+              color: tab === t ? "var(--moss-700)" : "var(--fg-secondary)",
+              cursor: "pointer",
+              fontWeight: tab === t ? 500 : 400,
             }}
           >
-            Ontwikkelgebied Schapenweide
-          </p>
-          <SchapenweideSchematic />
-        </div>
+            {t === "plankaart" ? "Plankaart" : "Luchtfoto"}
+          </button>
+        ))}
       </div>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={active.src}
+        alt={active.alt}
+        style={{
+          width: "100%",
+          height: "auto",
+          borderRadius: "var(--radius-lg)",
+          boxShadow: "var(--shadow-sm)",
+          display: "block",
+        }}
+      />
+      <p style={{ fontSize: 11, color: "var(--fg-muted)", margin: "8px 0 4px 0" }}>
+        {active.caption}
+      </p>
+      <a
+        href="https://www.debilt.nl/fileadmin/bestanden/Over_De_Bilt/Projecten/Schapenweide/Ontwikkelperspectief_Schapenweide.pdf"
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{ fontSize: 11, color: "var(--fg-muted)", textDecoration: "underline" }}
+      >
+        Bron: Ontwikkelperspectief Schapenweide · Gemeente De Bilt (PDF)
+      </a>
     </div>
   );
 }

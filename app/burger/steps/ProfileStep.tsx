@@ -1,17 +1,22 @@
 "use client";
 
 import { useRef, useState } from "react";
-import type { ProfileData, SuggestResult } from "@/lib/data/types";
+import type { ProfileData, ResidentLanguage, SuggestResult } from "@/lib/data/types";
 import { Eyebrow, DisplayH1, Lead, InputField, PrimaryBtn } from "../ui";
 
 export default function ProfileStep({
   onComplete,
+  initial,
 }: {
   onComplete: (data: ProfileData) => void;
+  initial?: ProfileData;
 }) {
-  const [voornaam, setVoornaam] = useState("");
-  const [achternaam, setAchternaam] = useState("");
-  const [leeftijdRaw, setLeeftijdRaw] = useState("");
+  const [voornaam, setVoornaam] = useState(initial?.voornaam ?? "");
+  const [achternaam, setAchternaam] = useState(initial?.achternaam ?? "");
+  const [leeftijdRaw, setLeeftijdRaw] = useState(
+    initial?.leeftijd ? String(initial.leeftijd) : "",
+  );
+  const [language, setLanguage] = useState<ResidentLanguage>(initial?.language ?? "nl");
 
   const [addressInput, setAddressInput] = useState("");
   const [suggestions, setSuggestions] = useState<SuggestResult[]>([]);
@@ -111,6 +116,9 @@ export default function ProfileStep({
       neighbourhood: selectedAddress.neighbourhood,
       straatnaam: selectedAddress.straatnaam,
       huis_nlt: selectedAddress.huis_nlt,
+      language,
+      lat: selectedAddress.lat,
+      lon: selectedAddress.lon,
     });
   }
 
@@ -122,6 +130,43 @@ export default function ProfileStep({
         Vul je naam en adres in. Wij zoeken het ontwikkelplan dat jou raakt en leggen het
         uit in begrijpelijke taal.
       </Lead>
+
+      {/* Taal */}
+      <div style={{ marginBottom: 16 }}>
+        <label
+          htmlFor="language"
+          style={{
+            display: "block",
+            fontSize: 13,
+            fontWeight: 500,
+            color: "var(--fg-secondary)",
+            marginBottom: 8,
+          }}
+        >
+          Taal van de uitleg
+        </label>
+        <select
+          id="language"
+          value={language}
+          onChange={(e) => setLanguage(e.target.value as ResidentLanguage)}
+          style={{
+            width: "100%",
+            padding: "12px 16px",
+            fontSize: 15,
+            fontFamily: "var(--font-sans)",
+            borderRadius: "var(--radius-md)",
+            border: "1px solid var(--border-medium)",
+            background: "var(--paper-0)",
+            color: "var(--ink-900)",
+            outline: "none",
+            boxSizing: "border-box",
+          }}
+        >
+          <option value="nl">Nederlands</option>
+          <option value="en">English</option>
+          <option value="es">Español</option>
+        </select>
+      </div>
 
       {/* Naam */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>

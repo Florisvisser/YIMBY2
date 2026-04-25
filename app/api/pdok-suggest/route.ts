@@ -15,7 +15,18 @@ type PdokDoc = {
   buurtnaam?: string;
   wijknaam?: string;
   woonplaatsnaam?: string;
+  centroide_ll?: string;
 };
+
+function parseCentroide(raw?: string): { lat: number; lon: number } | null {
+  if (!raw) return null;
+  const m = raw.match(/POINT\s*\(\s*([-\d.]+)\s+([-\d.]+)\s*\)/i);
+  if (!m) return null;
+  const lon = Number(m[1]);
+  const lat = Number(m[2]);
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+  return { lat, lon };
+}
 
 function normalizePostcode(raw: string): string {
   const compact = raw.replace(/\s+/g, "").toUpperCase();
@@ -34,7 +45,7 @@ export async function GET(request: Request) {
     const params = new URLSearchParams({
       q: parsed.data.q,
       fq: "type:adres",
-      fl: "weergavenaam,postcode,straatnaam,huis_nlt,buurtnaam,wijknaam,woonplaatsnaam",
+      fl: "weergavenaam,postcode,straatnaam,huis_nlt,buurtnaam,wijknaam,woonplaatsnaam,centroide_ll",
       rows: "6",
     });
     const res = await fetch(
@@ -51,16 +62,21 @@ export async function GET(request: Request) {
         (d): d is PdokDoc & { postcode: string; straatnaam: string } =>
           Boolean(d.postcode && d.straatnaam),
       )
-      .map((d) => ({
-        label:
-          d.weergavenaam ??
-          `${d.straatnaam} ${d.huis_nlt ?? ""}, ${normalizePostcode(d.postcode)}`.trim(),
-        postcode: normalizePostcode(d.postcode),
-        straatnaam: d.straatnaam,
-        huis_nlt: d.huis_nlt ?? "",
-        neighbourhood:
-          d.buurtnaam ?? d.wijknaam ?? d.woonplaatsnaam ?? "Bilthoven",
-      }));
+      .map((d) => {
+        const coord = parseCentroide(d.centroide_ll);
+        return {
+          label:
+            d.weergavenaam ??
+            `${d.straatnaam} ${d.huis_nlt ?? ""}, ${normalizePostcode(d.postcode)}`.trim(),
+          postcode: normalizePostcode(d.postcode),
+          straatnaam: d.straatnaam,
+          huis_nlt: d.huis_nlt ?? "",
+          neighbourhood:
+            d.buurtnaam ?? d.wijknaam ?? d.woonplaatsnaam ?? "Bilthoven",
+          lat: coord?.lat,
+          lon: coord?.lon,
+        };
+      });
 
     return Response.json(results);
   } catch {

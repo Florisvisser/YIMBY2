@@ -255,8 +255,17 @@ export default function BurgerForm() {
     let stream: MediaStream;
     try {
       stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    } catch {
-      setVoiceError("Microfoon niet toegankelijk. Controleer je browserinstellingen.");
+    } catch (err) {
+      const name = (err as DOMException | null)?.name ?? "";
+      if (name === "NotAllowedError" || name === "SecurityError") {
+        setVoiceError(
+          "Microfoon-toegang geweigerd. Klik op het slot-icoon naast de URL en sta microfoon toe.",
+        );
+      } else if (name === "NotFoundError" || name === "OverconstrainedError") {
+        setVoiceError("Geen microfoon gevonden. Sluit een microfoon aan en probeer opnieuw.");
+      } else {
+        setVoiceError("Microfoon niet toegankelijk. Controleer je browserinstellingen.");
+      }
       return;
     }
 
@@ -324,6 +333,7 @@ export default function BurgerForm() {
     if (planUitlegInFlight.current) return;
     planUitlegInFlight.current = true;
     setPlanUitlegLoading(true);
+    setStep("plan_uitleg");
     try {
       const res = await fetch("/api/plan-uitleg", {
         method: "POST",
@@ -333,6 +343,7 @@ export default function BurgerForm() {
           straatnaam: data.straatnaam,
           postcode: data.postcode,
           neighbourhood: data.neighbourhood,
+          language: data.language,
         }),
       });
       if (!res.ok) throw new Error(`plan-uitleg ${res.status}`);
@@ -377,7 +388,6 @@ export default function BurgerForm() {
     } finally {
       setPlanUitlegLoading(false);
       planUitlegInFlight.current = false;
-      setStep("plan_uitleg");
     }
   }
 
@@ -395,6 +405,7 @@ export default function BurgerForm() {
           voornaam: profile.voornaam,
           straatnaam: profile.straatnaam,
           postcode: profile.postcode,
+          language: profile.language,
         }),
       });
       const data = (await res.json()) as VraagResponse;
@@ -404,14 +415,16 @@ export default function BurgerForm() {
         { role: "assistant", content: data.answer },
       ]);
     } catch {
+      const fallbackText =
+        profile.language === "en"
+          ? "I'm not sure about that. Visit schapenweidebilthoven.nl or call 030 – 220 28 00."
+          : profile.language === "es"
+            ? "No estoy seguro/a. Visita schapenweidebilthoven.nl o llama al 030 – 220 28 00."
+            : "Dat weet ik helaas niet zeker. Kijk op schapenweidebilthoven.nl of bel 030 – 220 28 00.";
       setChatHistory((prev) => [
         ...prev,
         { role: "user", content: question },
-        {
-          role: "assistant",
-          content:
-            "Dat weet ik helaas niet zeker. Kijk op schapenweidebilthoven.nl of bel 030 – 220 28 00.",
-        },
+        { role: "assistant", content: fallbackText },
       ]);
     } finally {
       setChatSendInFlight(false);
@@ -651,7 +664,10 @@ export default function BurgerForm() {
 
         {/* Step: profile */}
         {step === "profile" && (
-          <ProfileStep onComplete={handleProfileComplete} />
+          <ProfileStep
+            onComplete={handleProfileComplete}
+            initial={profile ?? undefined}
+          />
         )}
 
         {/* Step: plan uitleg */}
@@ -659,6 +675,8 @@ export default function BurgerForm() {
           <PlanUitlegStep
             planUitleg={planUitleg}
             voornaam={profile?.voornaam ?? ""}
+            userLat={profile?.lat}
+            userLon={profile?.lon}
             onVraag={() => setStep("vraag_zorg")}
             onZorg={() => setStep("vraag_zorg")}
             onGeen={() => setStep("done")}

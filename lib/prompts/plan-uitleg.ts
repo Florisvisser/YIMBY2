@@ -1,3 +1,5 @@
+import type { ResidentLanguage } from "@/lib/data/types";
+
 const SCHAPENWEIDE_CONTEXT = `
 Project: Schapenweide, Bilthoven, gemeente De Bilt
 450 nieuwe woningen gepland voor 2026-2030
@@ -10,12 +12,12 @@ Bouwhoogte: plan gaat uit van max 6 lagen; bewoners willen max 4 lagen
 `.trim();
 
 const SCHEMA_GUIDE = `{
-  "intro": "<2-3 zinnen, spreek {voornaam} aan met 'jij/jouw', noem de {straatnaam} als die dicht bij het plan ligt>",
+  "intro": "<2-3 sentences, address the resident personally, mention their street if it is near the plan area>",
   "sections": [
     {
       "category": "traffic_parking",
-      "headline": "<max 8 woorden, concreet en begrijpelijk>",
-      "bodyText": "<2-3 zinnen, B1-Nederlands, geen jargon, straatnaam gebruiken als relevant>",
+      "headline": "<max 8 words, concrete and accessible>",
+      "bodyText": "<2-3 sentences, no jargon, mention the street when relevant>",
       "impactLevel": "laag | gemiddeld | hoog"
     },
     { "category": "building_height", "headline": "...", "bodyText": "...", "impactLevel": "..." },
@@ -24,23 +26,34 @@ const SCHEMA_GUIDE = `{
   ]
 }`;
 
+const OUTPUT_LANGUAGE_DIRECTIVE: Record<ResidentLanguage, string> = {
+  nl: "OUTPUT TAAL: Nederlands (B1-niveau). Alle tekst-velden in het Nederlands.",
+  en: "OUTPUT LANGUAGE: English (CEFR B1 level). ALL text fields (intro, headline, bodyText) MUST be written in English. Do not write any Dutch text in the output, even though the project is in the Netherlands.",
+  es: "IDIOMA DE SALIDA: español (nivel CEFR B1). TODOS los campos de texto (intro, headline, bodyText) DEBEN estar en español. No escribas ningún texto en neerlandés en la salida, aunque el proyecto esté en los Países Bajos.",
+};
+
 export function buildPlanUitlegPrompt(
   voornaam: string,
   straatnaam: string,
   postcode: string,
+  language: ResidentLanguage = "nl",
 ): string {
-  return `Je legt in begrijpelijke taal uit wat het Schapenweide-bouwproject betekent voor een bewoner.
+  return `${OUTPUT_LANGUAGE_DIRECTIVE[language]}
 
-Bewoner: ${voornaam}, woont aan de ${straatnaam || "onbekende straat"} (${postcode}) in Bilthoven.
+You explain in plain language what the Schapenweide building project means for a resident.
 
-Projectinformatie:
+Resident: ${voornaam}, lives at ${straatnaam || "unknown street"} (${postcode}) in Bilthoven.
+
+Project information (in Dutch — translate the relevant facts into the output language):
 ${SCHAPENWEIDE_CONTEXT}
 
-Schrijf een korte persoonlijke intro (2-3 zinnen, spreek ${voornaam} aan met "jij/jouw"). Baseer het impactLevel per thema op de nabijheid van de ${straatnaam || "straat"} tot het plangebied en de aard van het thema. Gebruik "hoog" spaarzaam — alleen als het thema écht direct effect heeft op deze straat.
+Write a short personal intro (2-3 sentences, address ${voornaam} personally). Base the impactLevel per theme on the proximity of ${straatnaam || "the street"} to the plan area and the nature of the theme. Use "hoog" sparingly — only when the theme has truly direct impact on this street.
 
-Schrijf in B1-Nederlands. Geen jargon. Geen Engelse woorden. Maximaal 3 zinnen per bodyText.
+The impactLevel enum value MUST stay exactly "laag" | "gemiddeld" | "hoog" (Dutch keys — these are machine-readable, do not translate). All other text fields (intro, headline, bodyText) MUST be in the output language declared above.
 
-Antwoord uitsluitend met geldige JSON. Geen uitleg, geen markdown fences:
+Respond with valid JSON only. No explanation, no markdown fences:
 
-${SCHEMA_GUIDE}`;
+${SCHEMA_GUIDE}
+
+REMINDER: ${OUTPUT_LANGUAGE_DIRECTIVE[language]}`;
 }
