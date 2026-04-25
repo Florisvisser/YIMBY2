@@ -1,4 +1,5 @@
 import { readSeededConcerns } from "./concerns-json";
+import { readSupabaseConcerns } from "./concerns-supabase";
 import {
   CATEGORY_LABEL_NL,
   type CategoryStats,
@@ -14,7 +15,15 @@ const CATEGORIES: ConcernCategory[] = [
 ];
 
 export async function getConcerns(): Promise<Concern[]> {
-  return readSeededConcerns();
+  const [seeded, supabase] = await Promise.allSettled([
+    readSeededConcerns(),
+    readSupabaseConcerns(),
+  ]);
+  const seedItems = seeded.status === "fulfilled" ? seeded.value : [];
+  const dbItems = supabase.status === "fulfilled" ? supabase.value : [];
+  return [...seedItems, ...dbItems].sort((a, b) =>
+    b.submittedAt.localeCompare(a.submittedAt),
+  );
 }
 
 export function groupByCategory(
