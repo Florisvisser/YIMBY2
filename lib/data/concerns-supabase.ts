@@ -1,4 +1,10 @@
-import type { Concern, ConcernCategory, PersonaType, Severity } from "./types";
+import type {
+  Concern,
+  ConcernCategory,
+  ConcernStatus,
+  PersonaType,
+  Severity,
+} from "./types";
 
 type SupabaseConcernRow = {
   id: string;
@@ -11,12 +17,15 @@ type SupabaseConcernRow = {
   concern_text: string;
   persona_type: PersonaType;
   submitted_at: string;
+  status: ConcernStatus;
 };
 
 function rowToConcern(row: SupabaseConcernRow): Concern {
   return {
     id: row.id,
     projectId: row.project_id,
+    source: "db",
+    status: row.status,
     postcode: row.postcode,
     neighbourhood: row.neighbourhood,
     streetReference: row.street_reference ?? undefined,
@@ -64,8 +73,75 @@ export async function readSupabaseConcerns(): Promise<Concern[]> {
   return rows.map(rowToConcern);
 }
 
+export async function readSupabaseConcernsByIds(
+  ids: string[],
+): Promise<Concern[]> {
+  const env = getEnv();
+  if (!env || ids.length === 0) return [];
+
+  const idList = ids.map(encodeURIComponent).join(",");
+  const endpoint = `${env.url}/rest/v1/concerns?select=*&id=in.(${idList})`;
+  const res = await fetch(endpoint, {
+    headers: {
+      apikey: env.key,
+      Authorization: `Bearer ${env.key}`,
+    },
+    cache: "no-store",
+  });
+
+  if (!res.ok) {
+    console.warn(
+      `[concerns-supabase] readByIds faalde (${res.status}) — lege lijst.`,
+    );
+    return [];
+  }
+
+  const rows = (await res.json()) as SupabaseConcernRow[];
+  return rows.map(rowToConcern);
+}
+
+export async function updateConcernStatus(
+  id: string,
+  status: ConcernStatus,
+): Promise<Concern> {
+  const env = getEnv();
+  if (!env) {
+    throw new Error(
+      "Supabase env vars ontbreken (NEXT_PUBLIC_SUPABASE_URL / SUPABASE_ANON_KEY).",
+    );
+  }
+
+  const res = await fetch(
+    `${env.url}/rest/v1/concerns?id=eq.${encodeURIComponent(id)}`,
+    {
+      method: "PATCH",
+      headers: {
+        apikey: env.key,
+        Authorization: `Bearer ${env.key}`,
+        "Content-Type": "application/json",
+        Prefer: "return=representation",
+      },
+      body: JSON.stringify({ status }),
+    },
+  );
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Supabase update faalde (${res.status}): ${text}`);
+  }
+
+  const rows = (await res.json()) as SupabaseConcernRow[];
+  if (rows.length === 0) {
+    throw new Error("Supabase update leverde geen rij terug — id niet gevonden?");
+  }
+  return rowToConcern(rows[0]);
+}
+
 export async function insertSupabaseConcern(
-  payload: Omit<SupabaseConcernRow, "id" | "project_id" | "submitted_at">,
+  payload: Omit<
+    SupabaseConcernRow,
+    "id" | "project_id" | "submitted_at" | "status"
+  >,
 ): Promise<Concern> {
   const env = getEnv();
   if (!env) {

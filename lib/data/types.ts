@@ -13,9 +13,13 @@ export type PersonaType =
 
 export type Severity = 1 | 2 | 3 | 4 | 5;
 
+export type ConcernStatus = "new" | "in_review" | "answered";
+
 export type Concern = {
   id: string;
   projectId: "schapenweide";
+  source: "seed" | "db";
+  status?: ConcernStatus;
   postcode: string;
   neighbourhood: string;
   streetReference?: string;
@@ -24,6 +28,12 @@ export type Concern = {
   concernText: string;
   personaType: PersonaType;
   submittedAt: string;
+};
+
+export const STATUS_LABEL_NL: Record<ConcernStatus, string> = {
+  new: "Nieuw",
+  in_review: "In behandeling",
+  answered: "Beantwoord",
 };
 
 export const CATEGORY_LABEL_NL: Record<ConcernCategory, string> = {
