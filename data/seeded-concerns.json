@@ -1,0 +1,49 @@
+[
+  {
+    "id": "c-001",
+    "projectId": "schapenweide",
+    "postcode": "3722 HD",
+    "neighbourhood": "Bilthoven",
+    "streetReference": "Emmalaan",
+    "category": "traffic_parking",
+    "severity": 4,
+    "concernText": "STUB — wordt vervangen door Persoon B met 50 echte concerns. De Emmalaan staat nu al vol bij ophaal van de school.",
+    "personaType": "young_family",
+    "submittedAt": "2026-04-12T09:30:00+02:00"
+  },
+  {
+    "id": "c-002",
+    "projectId": "schapenweide",
+    "postcode": "3722 HD",
+    "neighbourhood": "Bilthoven",
+    "streetReference": "Nachtegaalstraat",
+    "category": "building_height",
+    "severity": 3,
+    "concernText": "STUB — vier bouwlagen verandert het uitzicht vanaf de Nachtegaalstraat aanzienlijk.",
+    "personaType": "elderly_resident",
+    "submittedAt": "2026-04-13T14:10:00+02:00"
+  },
+  {
+    "id": "c-003",
+    "projectId": "schapenweide",
+    "postcode": "3722 HD",
+    "neighbourhood": "Bilthoven",
+    "streetReference": "Vinkenlaan",
+    "category": "green_nature",
+    "severity": 5,
+    "concernText": "STUB — de dassenburcht aan de westrand mag niet verdwijnen.",
+    "personaType": "underrepresented_resident",
+    "submittedAt": "2026-04-14T08:45:00+02:00"
+  },
+  {
+    "id": "c-004",
+    "projectId": "schapenweide",
+    "postcode": "3722 HD",
+    "neighbourhood": "Bilthoven",
+    "category": "noise_livability",
+    "severity": 4,
+    "concernText": "STUB — bouwlawaai in de weekends is voor onze winkel een directe omzetpost.",
+    "personaType": "local_business",
+    "submittedAt": "2026-04-15T16:20:00+02:00"
+  }
+]
