@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
 import { buildSuggestPrompt } from "@/lib/prompts/suggest";
+import { extractJson } from "@/lib/prompts/utils";
 import type { ConcernCategory } from "@/lib/data/types";
 
 export const runtime = "nodejs";
@@ -59,16 +60,6 @@ const FALLBACK: Record<ConcernCategory, SuggestResponse> = {
       "Stel een bouwverkeerplan op met vaste rijroutes via de Soestdijkseweg en beperk bouwactiviteiten tot werkdagen tussen 07:00 en 18:00.",
   },
 };
-
-function extractJson(text: string): string {
-  const fenced = text.trim().match(/```(?:json)?\s*([\s\S]*?)```/);
-  if (fenced) return fenced[1].trim();
-  const stripped = text.trim();
-  const first = stripped.indexOf("{");
-  const last = stripped.lastIndexOf("}");
-  if (first !== -1 && last > first) return stripped.slice(first, last + 1);
-  return stripped;
-}
 
 async function tryClaude(
   category: ConcernCategory,

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { buildPlanUitlegPrompt } from "@/lib/prompts/plan-uitleg";
 import { PlanUitlegReportSchema } from "@/lib/plan-uitleg/schema";
 import { getFallbackPlanUitleg } from "@/lib/plan-uitleg/fallback";
+import { extractJson } from "@/lib/prompts/utils";
 import type { PlanUitlegReport } from "@/lib/data/types";
 
 export const runtime = "nodejs";
@@ -15,15 +16,8 @@ const RequestSchema = z.object({
   voornaam: z.string().min(1).max(100),
   straatnaam: z.string().min(1).max(200),
   postcode: z.string().min(4).max(10),
-  neighbourhood: z.string().min(1).max(120),
   forceFallback: z.boolean().optional(),
 });
-
-function extractJson(text: string): string {
-  const fenced = text.trim().match(/```(?:json)?\s*([\s\S]*?)```/);
-  if (fenced) return fenced[1].trim();
-  return text.trim();
-}
 
 async function tryClaude(
   voornaam: string,

@@ -21,7 +21,7 @@ export default function ProfileStep({
   const [suggestError, setSuggestError] = useState(false);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const fetchInFlight = useRef(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const leeftijd = parseInt(leeftijdRaw, 10);
   const leeftijdValid = !isNaN(leeftijd) && leeftijd >= 1 && leeftijd <= 120;
@@ -43,21 +43,22 @@ export default function ProfileStep({
     if (val.length < 4) return;
 
     debounceRef.current = setTimeout(async () => {
-      if (fetchInFlight.current) return;
-      fetchInFlight.current = true;
+      abortControllerRef.current?.abort();
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
       try {
         const res = await fetch(
           `/api/pdok-suggest?q=${encodeURIComponent(val)}`,
+          { signal: controller.signal },
         );
         const data = (await res.json()) as SuggestResult[];
         setSuggestions(data);
         setDropdownOpen(data.length > 0);
         if (data.length === 0) setSuggestError(true);
-      } catch {
+      } catch (err) {
+        if ((err as Error).name === "AbortError") return;
         setSuggestions([]);
         setSuggestError(true);
-      } finally {
-        fetchInFlight.current = false;
       }
     }, 300);
   }

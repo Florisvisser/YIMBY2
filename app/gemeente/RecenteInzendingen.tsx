@@ -10,6 +10,7 @@ import {
   type ConcernStatus,
 } from "@/lib/data/types";
 import { groupByCategory } from "@/lib/data/concerns";
+import { severityTone } from "./severity-utils";
 
 type FilterValue = "all" | ConcernStatus;
 type ViewMode = "list" | "thema";
@@ -30,12 +31,6 @@ const STATUS_BADGE: Record<ConcernStatus, { bg: string; fg: string }> = {
 function snippet(text: string, max = 140): string {
   if (text.length <= max) return text;
   return text.slice(0, max).trimEnd() + "…";
-}
-
-function severityTone(severity: number): { fg: string; bg: string; label: string } {
-  if (severity >= 4) return { fg: "var(--rose-500)", bg: "var(--rose-50)", label: "Hoog" };
-  if (severity === 3) return { fg: "var(--amber-500)", bg: "var(--amber-50)", label: "Midden" };
-  return { fg: "var(--moss-700)", bg: "var(--moss-50)", label: "Laag" };
 }
 
 function formatDateTime(iso: string): string {
@@ -137,18 +132,19 @@ export default function RecenteInzendingen({
   }
 
   async function markAllAnswered(category: ConcernCategory, ids: string[]) {
-    if (bulkInFlight.current[category] || ids.length === 0) return;
+    const safeIds = ids.filter((id) => !inFlight.current[id]);
+    if (bulkInFlight.current[category] || safeIds.length === 0) return;
     bulkInFlight.current[category] = true;
     const prevStatuses = Object.fromEntries(
-      ids.map((id) => [id, enriched.find((c) => c.id === id)?.status ?? ("new" as ConcernStatus)]),
+      safeIds.map((id) => [id, enriched.find((c) => c.id === id)?.status ?? ("new" as ConcernStatus)]),
     );
     setOverrides((o) => ({
       ...o,
-      ...Object.fromEntries(ids.map((id) => [id, "answered" as ConcernStatus])),
+      ...Object.fromEntries(safeIds.map((id) => [id, "answered" as ConcernStatus])),
     }));
     try {
       const results = await Promise.allSettled(
-        ids.map((id) =>
+        safeIds.map((id) =>
           fetch(`/api/concerns/${id}`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
@@ -158,9 +154,9 @@ export default function RecenteInzendingen({
       );
       results.forEach((r, i) => {
         if (r.status === "rejected" || (r.status === "fulfilled" && !r.value.ok)) {
-          const id = ids[i];
+          const id = safeIds[i];
           setOverrides((o) => ({ ...o, [id]: prevStatuses[id] }));
-          console.warn(`[bulk-mark] PATCH mislukt voor ${ids[i]}`);
+          console.warn(`[bulk-mark] PATCH mislukt voor ${safeIds[i]}`);
         }
       });
     } finally {

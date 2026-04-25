@@ -116,9 +116,73 @@ export default function BurgerForm() {
   const [severity, setSeverity] = useState<number>(3);
   const [concernText, setConcernText] = useState("");
   const [recording, setRecording] = useState(false);
+  const [voiceLoading, setVoiceLoading] = useState(false);
+  const [voiceError, setVoiceError] = useState<string | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const streamRef = useRef<MediaStream | null>(null);
   const [submitLoading, setSubmitLoading] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const submitInFlight = useRef(false);
+
+  async function handleVoiceToggle() {
+    if (voiceLoading) return;
+    setVoiceError(null);
+
+    if (recording) {
+      mediaRecorderRef.current?.stop();
+      return;
+    }
+
+    let stream: MediaStream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch {
+      setVoiceError("Microfoon niet toegankelijk. Controleer je browserinstellingen.");
+      return;
+    }
+
+    streamRef.current = stream;
+    chunksRef.current = [];
+    const recorder = new MediaRecorder(stream);
+    mediaRecorderRef.current = recorder;
+
+    recorder.ondataavailable = (e) => {
+      if (e.data.size > 0) chunksRef.current.push(e.data);
+    };
+
+    recorder.onstop = async () => {
+      streamRef.current?.getTracks().forEach((t) => t.stop());
+      streamRef.current = null;
+      const blob = new Blob(chunksRef.current, { type: recorder.mimeType || "audio/webm" });
+      chunksRef.current = [];
+      setRecording(false);
+      setVoiceLoading(true);
+      try {
+        const res = await fetch("/api/reson8", {
+          method: "POST",
+          headers: { "Content-Type": "application/octet-stream" },
+          body: blob,
+        });
+        const data = await res.json() as { transcript?: string; error?: string };
+        if (!res.ok || !data.transcript) {
+          setVoiceError(data.error ?? "Transcriptie mislukt. Probeer opnieuw of typ je zorg.");
+        } else {
+          setConcernText((prev) => {
+            const joined = prev.trim() ? `${prev.trim()} ${data.transcript!}` : data.transcript!;
+            return joined.slice(0, MAX_TEXT);
+          });
+        }
+      } catch {
+        setVoiceError("Transcriptie niet beschikbaar. Probeer opnieuw of typ je zorg.");
+      } finally {
+        setVoiceLoading(false);
+      }
+    };
+
+    recorder.start();
+    setRecording(true);
+  }
 
   async function handleProfileComplete(data: ProfileData) {
     setProfile(data);
@@ -145,11 +209,21 @@ export default function BurgerForm() {
           neighbourhood: data.neighbourhood,
         }),
       });
+      if (!res.ok) throw new Error(`plan-uitleg ${res.status}`);
       const uitlegData = (await res.json()) as PlanUitlegReport;
       setPlanUitleg(uitlegData);
     } catch {
-      // Fallback: inline empty report that triggers fallback rendering
-      setPlanUitleg(null);
+      setPlanUitleg({
+        source: "fallback",
+        generatedAt: new Date().toISOString(),
+        intro: `Hallo ${data.voornaam || "bewoner"}, hier is wat het Schapenweide-plan voor jouw buurt betekent. Er komen 450 nieuwe woningen in Bilthoven.`,
+        sections: [
+          { category: "traffic_parking", headline: "Meer verkeer verwacht", bodyText: "De gemeente onderzoekt hoe de verkeersafwikkeling veilig blijft met 450 extra woningen.", impactLevel: "hoog" },
+          { category: "building_height", headline: "Gebouwen tot zes verdiepingen", bodyText: "Hogere gebouwen kunnen meer schaduw geven op naastgelegen woningen en tuinen.", impactLevel: "gemiddeld" },
+          { category: "green_nature", headline: "Dassenburcht beschermd", bodyText: "Wettelijk beschermde dassen op het terrein worden meegenomen in de planvorming.", impactLevel: "gemiddeld" },
+          { category: "noise_livability", headline: "Bouwgeluid meerdere jaren", bodyText: "De gemeente stelt bouwtijden en een meldpunt klachten in voor de bouwperiode.", impactLevel: "laag" },
+        ],
+      });
     } finally {
       setPlanUitlegLoading(false);
       planUitlegInFlight.current = false;
@@ -606,18 +680,19 @@ export default function BurgerForm() {
                   </p>
                 </div>
 
-                {/* Voice */}
+                {/* Voice — Reson8 speech-to-text */}
                 <button
                   type="button"
-                  onClick={() => setRecording(!recording)}
+                  onClick={handleVoiceToggle}
+                  disabled={voiceLoading}
                   style={{
                     width: "100%",
                     padding: "12px 16px",
                     borderRadius: "var(--radius-md)",
                     background: recording ? "var(--clay-50)" : "var(--paper-0)",
                     border: recording ? "1.5px solid var(--clay-300)" : "1px solid var(--border-soft)",
-                    color: recording ? "var(--clay-500)" : "var(--fg-secondary)",
-                    cursor: "pointer",
+                    color: recording ? "var(--clay-500)" : voiceLoading ? "var(--fg-tertiary)" : "var(--fg-secondary)",
+                    cursor: voiceLoading ? "default" : "pointer",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -625,13 +700,19 @@ export default function BurgerForm() {
                     fontSize: 14,
                     fontWeight: 500,
                     fontFamily: "var(--font-sans)",
-                    marginBottom: 20,
+                    marginBottom: voiceError ? 8 : 20,
                     transition: `all var(--dur-fast) var(--ease-out)`,
                   }}
                 >
                   <MicIcon active={recording} />
-                  {recording ? "Aan het opnemen… (Reson8)" : "Inspreken in plaats van typen"}
+                  {voiceLoading ? "Transcriptie…" : recording ? "Stop opnemen" : "Inspreken in plaats van typen"}
                 </button>
+
+                {voiceError && (
+                  <p style={{ fontSize: 12, color: "var(--rose-500)", margin: "0 0 16px 0" }}>
+                    {voiceError}
+                  </p>
+                )}
 
                 {submitError && (
                   <div style={{ background: "var(--rose-50)", borderRadius: "var(--radius-sm)", padding: "10px 14px", fontSize: 13, color: "var(--rose-500)", marginBottom: 12 }}>
