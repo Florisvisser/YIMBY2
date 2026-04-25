@@ -1,5 +1,6 @@
 import { getConcerns, getCategoryStats } from "@/lib/data/concerns";
 import MotiveringPanel from "./MotiveringPanel";
+import RecenteInzendingen from "./RecenteInzendingen";
 
 export const revalidate = 0;
 
@@ -190,6 +191,21 @@ export default async function GemeentePage() {
               />
             ))}
           </div>
+        </section>
+
+        {/* Recente burger-inzendingen */}
+        <section style={{ marginBottom: 48 }}>
+          <h2 style={{
+            fontSize: 11,
+            fontWeight: 500,
+            textTransform: "uppercase",
+            letterSpacing: "0.18em",
+            color: "var(--fg-tertiary)",
+            margin: "0 0 16px 0",
+          }}>
+            Recente burger-inzendingen
+          </h2>
+          <RecenteInzendingen concerns={concerns.filter((c) => c.source === "db")} />
         </section>
 
         {/* Report panel */}
