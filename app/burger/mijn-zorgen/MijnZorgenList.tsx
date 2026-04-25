@@ -11,17 +11,14 @@ import {
 
 const STORAGE_KEY = "samenspraak.submissions.v1";
 
-function subscribeStorage(callback: () => void): () => void {
-  if (typeof window === "undefined") return () => {};
-  window.addEventListener("storage", callback);
-  return () => window.removeEventListener("storage", callback);
-}
+let cachedRaw: string | null = null;
+let cachedIds: string[] = [];
+let storageInvalidated = true;
 
-function readIds(): string[] {
-  if (typeof window === "undefined") return [];
+function parseIds(raw: string | null): string[] {
+  if (!raw) return [];
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    const parsed = raw ? (JSON.parse(raw) as unknown) : [];
+    const parsed = JSON.parse(raw) as unknown;
     return Array.isArray(parsed)
       ? (parsed.filter((x) => typeof x === "string") as string[])
       : [];
@@ -30,11 +27,34 @@ function readIds(): string[] {
   }
 }
 
+function readIds(): string[] {
+  if (typeof window === "undefined") return [];
+  const raw = window.localStorage.getItem(STORAGE_KEY);
+  if (storageInvalidated || raw !== cachedRaw) {
+    cachedRaw = raw;
+    cachedIds = parseIds(raw);
+    storageInvalidated = false;
+  }
+  return cachedIds;
+}
+
+function subscribeStorage(callback: () => void): () => void {
+  if (typeof window === "undefined") return () => {};
+  const handler = () => {
+    storageInvalidated = true;
+    callback();
+  };
+  window.addEventListener("storage", handler);
+  return () => window.removeEventListener("storage", handler);
+}
+
+const SERVER_SNAPSHOT: string[] | null = null;
+
 function useSubmissionIds(): string[] | null {
   return useSyncExternalStore(
     subscribeStorage,
     readIds,
-    () => null,
+    () => SERVER_SNAPSHOT,
   );
 }
 
