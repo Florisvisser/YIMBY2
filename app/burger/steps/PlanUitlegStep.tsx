@@ -142,15 +142,46 @@ function SchapenweideSchematic() {
   );
 }
 
+const SCHAPENWEIDE_LAT = 52.126;
+const SCHAPENWEIDE_LON = 5.195;
+
+function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371;
+  const toRad = (x: number) => (x * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(a));
+}
+
+function bearingLabel(lat1: number, lon1: number, lat2: number, lon2: number): string {
+  const toRad = (x: number) => (x * Math.PI) / 180;
+  const toDeg = (x: number) => (x * 180) / Math.PI;
+  const dLon = toRad(lon2 - lon1);
+  const y = Math.sin(dLon) * Math.cos(toRad(lat2));
+  const x =
+    Math.cos(toRad(lat1)) * Math.sin(toRad(lat2)) -
+    Math.sin(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.cos(dLon);
+  const brng = (toDeg(Math.atan2(y, x)) + 360) % 360;
+  const dirs = ["noord", "noord-oost", "oost", "zuid-oost", "zuid", "zuid-west", "west", "noord-west"];
+  return dirs[Math.round(brng / 45) % 8];
+}
+
 export default function PlanUitlegStep({
   planUitleg,
   voornaam,
+  userLat,
+  userLon,
   onVraag,
   onZorg,
   onGeen,
 }: {
   planUitleg: PlanUitlegReport;
   voornaam: string;
+  userLat?: number;
+  userLon?: number;
   onVraag: () => void;
   onZorg: () => void;
   onGeen: () => void;
@@ -499,26 +530,56 @@ export default function PlanUitlegStep({
         >
           Locatie
         </p>
-        <iframe
-          title="Schapenweide locatie"
-          src="https://www.openstreetmap.org/export/embed.html?bbox=5.175%2C52.118%2C5.215%2C52.134&layer=mapnik&marker=52.126%2C5.195"
-          style={{
-            width: "100%",
-            aspectRatio: "4/3",
-            border: "none",
-            borderRadius: "var(--radius-lg)",
-            boxShadow: "var(--shadow-md)",
-          }}
-          loading="lazy"
-        />
-        <a
-          href="https://www.openstreetmap.org/?mlat=52.126&mlon=5.195#map=15/52.126/5.195"
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{ fontSize: 11, color: "var(--fg-muted)", textDecoration: "underline" }}
-        >
-          Vergroot kaart
-        </a>
+        {(() => {
+          const hasUser = typeof userLat === "number" && typeof userLon === "number";
+          const markerLat = hasUser ? (userLat as number) : SCHAPENWEIDE_LAT;
+          const markerLon = hasUser ? (userLon as number) : SCHAPENWEIDE_LON;
+          const minLat = Math.min(markerLat, SCHAPENWEIDE_LAT) - 0.005;
+          const maxLat = Math.max(markerLat, SCHAPENWEIDE_LAT) + 0.005;
+          const minLon = Math.min(markerLon, SCHAPENWEIDE_LON) - 0.005;
+          const maxLon = Math.max(markerLon, SCHAPENWEIDE_LON) + 0.005;
+          const embedSrc = `https://www.openstreetmap.org/export/embed.html?bbox=${minLon}%2C${minLat}%2C${maxLon}%2C${maxLat}&layer=mapnik&marker=${markerLat}%2C${markerLon}`;
+          const fullUrl = `https://www.openstreetmap.org/?mlat=${markerLat}&mlon=${markerLon}#map=15/${markerLat}/${markerLon}`;
+          const distanceKm = hasUser
+            ? haversineKm(markerLat, markerLon, SCHAPENWEIDE_LAT, SCHAPENWEIDE_LON)
+            : 0;
+          const direction = hasUser
+            ? bearingLabel(markerLat, markerLon, SCHAPENWEIDE_LAT, SCHAPENWEIDE_LON)
+            : "";
+          return (
+            <>
+              <iframe
+                title="Locatie"
+                src={embedSrc}
+                style={{
+                  width: "100%",
+                  aspectRatio: "4/3",
+                  border: "none",
+                  borderRadius: "var(--radius-lg)",
+                  boxShadow: "var(--shadow-md)",
+                }}
+                loading="lazy"
+              />
+              {hasUser && distanceKm > 0.05 ? (
+                <p style={{ fontSize: 12, color: "var(--fg-muted)", margin: 0 }}>
+                  📍 Jouw adres · plangebied Schapenweide ligt {distanceKm.toFixed(1)} km {direction}
+                </p>
+              ) : (
+                <p style={{ fontSize: 12, color: "var(--fg-muted)", margin: 0 }}>
+                  📍 Plangebied Schapenweide
+                </p>
+              )}
+              <a
+                href={fullUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ fontSize: 11, color: "var(--fg-muted)", textDecoration: "underline" }}
+              >
+                Vergroot kaart
+              </a>
+            </>
+          );
+        })()}
 
         <div style={{ marginTop: 8 }}>
           <p

@@ -89,6 +89,8 @@ export type SuggestResult = {
   straatnaam: string;
   huis_nlt: string;
   neighbourhood: string;
+  lat?: number;
+  lon?: number;
 };
 
 export type ProfileData = {
@@ -99,6 +101,8 @@ export type ProfileData = {
   neighbourhood: string;
   straatnaam: string;
   huis_nlt: string;
+  lat?: number;
+  lon?: number;
 };
 
 export type PlanUitlegSection = {

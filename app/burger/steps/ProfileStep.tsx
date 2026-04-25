@@ -115,6 +115,8 @@ export default function ProfileStep({
       neighbourhood: selectedAddress.neighbourhood,
       straatnaam: selectedAddress.straatnaam,
       huis_nlt: selectedAddress.huis_nlt,
+      lat: selectedAddress.lat,
+      lon: selectedAddress.lon,
     });
   }
 

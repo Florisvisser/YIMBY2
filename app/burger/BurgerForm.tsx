@@ -671,6 +671,8 @@ export default function BurgerForm() {
           <PlanUitlegStep
             planUitleg={planUitleg}
             voornaam={profile?.voornaam ?? ""}
+            userLat={profile?.lat}
+            userLon={profile?.lon}
             onVraag={() => setStep("vraag_zorg")}
             onZorg={() => setStep("vraag_zorg")}
             onGeen={() => setStep("done")}
