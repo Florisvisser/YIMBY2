@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 56" fill="none">
+  <defs>
+    
+  </defs>
+  
+  <circle cx="18" cy="28" r="11" fill="#406A2C"></circle>
+  <circle cx="32" cy="28" r="11" fill="none" stroke="#1A1612" stroke-width="1.6"></circle>
+  <path d="M11 35 L9 40 L15 36 Z" fill="#406A2C"></path>
+  
+  <text x="56" y="38" font-family="Fraunces, Georgia, serif" font-weight="500" font-size="32" fill="#1A1612" letter-spacing="-0.5" font-style="normal" font-variation-settings="&#39;opsz&#39; 144, &#39;SOFT&#39; 50">Samenspraak</text>
+</svg>
