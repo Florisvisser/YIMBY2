@@ -88,7 +88,7 @@ export default function RecenteInzendingen({
 }: {
   concerns: Concern[];
 }) {
-  const [filter, setFilter] = useState<FilterValue>("all");
+  const [filter, setFilter] = useState<FilterValue>("new");
   const [viewMode, setViewMode] = useState<ViewMode>("list");
   const [overrides, setOverrides] = useState<Record<string, ConcernStatus>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
