@@ -1,8 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import { CATEGORY_LABEL_NL, type PlanUitlegReport, type ConcernCategory } from "@/lib/data/types";
 import { Eyebrow, Lead } from "../ui";
+
+const PlanLocatieMap = dynamic(() => import("./PlanLocatieMap"), { ssr: false });
 
 const CATEGORY_ICON: Record<ConcernCategory, string> = {
   traffic_parking: "🚗",
@@ -469,33 +472,19 @@ export default function PlanUitlegStep({
         </p>
         {(() => {
           const hasUser = typeof userLat === "number" && typeof userLon === "number";
-          const markerLat = hasUser ? (userLat as number) : SCHAPENWEIDE_LAT;
-          const markerLon = hasUser ? (userLon as number) : SCHAPENWEIDE_LON;
-          const minLat = Math.min(markerLat, SCHAPENWEIDE_LAT) - 0.005;
-          const maxLat = Math.max(markerLat, SCHAPENWEIDE_LAT) + 0.005;
-          const minLon = Math.min(markerLon, SCHAPENWEIDE_LON) - 0.005;
-          const maxLon = Math.max(markerLon, SCHAPENWEIDE_LON) + 0.005;
-          const embedSrc = `https://www.openstreetmap.org/export/embed.html?bbox=${minLon}%2C${minLat}%2C${maxLon}%2C${maxLat}&layer=mapnik&marker=${markerLat}%2C${markerLon}`;
-          const fullUrl = `https://www.openstreetmap.org/?mlat=${markerLat}&mlon=${markerLon}#map=15/${markerLat}/${markerLon}`;
           const distanceKm = hasUser
-            ? haversineKm(markerLat, markerLon, SCHAPENWEIDE_LAT, SCHAPENWEIDE_LON)
+            ? haversineKm(userLat as number, userLon as number, SCHAPENWEIDE_LAT, SCHAPENWEIDE_LON)
             : 0;
           const direction = hasUser
-            ? bearingLabel(markerLat, markerLon, SCHAPENWEIDE_LAT, SCHAPENWEIDE_LON)
+            ? bearingLabel(userLat as number, userLon as number, SCHAPENWEIDE_LAT, SCHAPENWEIDE_LON)
             : "";
           return (
             <>
-              <iframe
-                title="Locatie"
-                src={embedSrc}
-                style={{
-                  width: "100%",
-                  aspectRatio: "4/3",
-                  border: "none",
-                  borderRadius: "var(--radius-lg)",
-                  boxShadow: "var(--shadow-md)",
-                }}
-                loading="lazy"
+              <PlanLocatieMap
+                userLat={userLat}
+                userLon={userLon}
+                schapenweideLat={SCHAPENWEIDE_LAT}
+                schapenweideLon={SCHAPENWEIDE_LON}
               />
               {hasUser && distanceKm > 0.05 ? (
                 <p style={{ fontSize: 12, color: "var(--fg-muted)", margin: 0 }}>
@@ -506,14 +495,6 @@ export default function PlanUitlegStep({
                   📍 Plangebied Schapenweide
                 </p>
               )}
-              <a
-                href={fullUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ fontSize: 11, color: "var(--fg-muted)", textDecoration: "underline" }}
-              >
-                Vergroot kaart
-              </a>
             </>
           );
         })()}
@@ -525,17 +506,27 @@ export default function PlanUitlegStep({
 }
 
 function OmgevingsvisieFigure() {
-  const [tab, setTab] = useState<"plankaart" | "luchtfoto">("plankaart");
-  const sources: Record<typeof tab, { src: string; alt: string; caption: string }> = {
+  const [tab, setTab] = useState<"plankaart" | "luchtfoto" | "randvoorwaardenkaart">(
+    "plankaart",
+  );
+  const sources: Record<typeof tab, { src: string; alt: string; caption: string; label: string }> = {
     plankaart: {
       src: "/schapenweide/plankaart-toekomstige-situatie.jpg",
       alt: "Plankaart toekomstige situatie gemeente De Bilt met Schapenweide gemarkeerd",
       caption: "Toekomstige situatie · regio De Bilt met Schapenweide gemarkeerd",
+      label: "Plankaart",
     },
     luchtfoto: {
       src: "/schapenweide/luchtfoto-terrein.jpg",
       alt: "Luchtfoto van het Schapenweide-terrein in de huidige situatie",
       caption: "Huidige situatie · luchtfoto Schapenweide-terrein",
+      label: "Luchtfoto",
+    },
+    randvoorwaardenkaart: {
+      src: "/schapenweide/randvoorwaardenkaart.jpg",
+      alt: "Randvoorwaardenkaart Schapenweide met groenstructuur, bouwvelden en overige randvoorwaarden",
+      caption: "Randvoorwaardenkaart · groenstructuur, bouwvelden en zoneringen",
+      label: "Randvoorwaardenkaart",
     },
   };
   const active = sources[tab];
@@ -554,8 +545,8 @@ function OmgevingsvisieFigure() {
       >
         Ontwikkelgebied Schapenweide
       </p>
-      <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
-        {(["plankaart", "luchtfoto"] as const).map((t) => (
+      <div style={{ display: "flex", gap: 6, marginBottom: 10, flexWrap: "wrap" }}>
+        {(["plankaart", "luchtfoto", "randvoorwaardenkaart"] as const).map((t) => (
           <button
             key={t}
             type="button"
@@ -573,7 +564,7 @@ function OmgevingsvisieFigure() {
               fontWeight: tab === t ? 500 : 400,
             }}
           >
-            {t === "plankaart" ? "Plankaart" : "Luchtfoto"}
+            {sources[t].label}
           </button>
         ))}
       </div>

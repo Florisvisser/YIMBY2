@@ -14,14 +14,8 @@ describe("GET /api/pdok-suggest — short query guard", () => {
     expect(data).toEqual([]);
   });
 
-  it("returns [] for q with 1 char", async () => {
+  it("returns [] for q with 1 char (boundary — min is 2)", async () => {
     const res = await GET(makeRequest("a"));
-    expect(res.status).toBe(200);
-    expect(await res.json()).toEqual([]);
-  });
-
-  it("returns [] for q with 3 chars (boundary — min is 4)", async () => {
-    const res = await GET(makeRequest("Emm"));
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual([]);
   });
@@ -40,7 +34,7 @@ describe("GET /api/pdok-suggest — external call with mock fetch", () => {
       vi.fn().mockResolvedValue({ ok: false, json: async () => ({}) }),
     );
     try {
-      const res = await GET(makeRequest("Emmalaan 12"));
+      const res = await GET(makeRequest("Bilth"));
       expect(res.status).toBe(200);
       expect(await res.json()).toEqual([]);
     } finally {
@@ -54,7 +48,7 @@ describe("GET /api/pdok-suggest — external call with mock fetch", () => {
       vi.fn().mockRejectedValue(new DOMException("signal timed out", "TimeoutError")),
     );
     try {
-      const res = await GET(makeRequest("Emmalaan 12"));
+      const res = await GET(makeRequest("Bilth"));
       expect(res.status).toBe(200);
       expect(await res.json()).toEqual([]);
     } finally {
@@ -62,35 +56,61 @@ describe("GET /api/pdok-suggest — external call with mock fetch", () => {
     }
   });
 
-  it("maps PDOK docs to SuggestResult shape", async () => {
-    const mockDoc = {
-      weergavenaam: "Emmalaan 12, 3722 XL Bilthoven",
-      postcode: "3722XL",
-      straatnaam: "Emmalaan",
-      huis_nlt: "12",
-      buurtnaam: "Bilthoven-centrum",
-    };
+  it("maps PDOK suggest docs to {id, label} SuggestResult shape", async () => {
+    const mockDocs = [
+      {
+        id: "adr-15cf2474f4a73310b7bda0c8f4cdfd64",
+        type: "adres",
+        weergavenaam: "Emmalaan 12, 3722XL Bilthoven",
+      },
+      {
+        id: "adr-b2eee51ea672100c349e0ab719d68a15",
+        type: "adres",
+        weergavenaam: "Emmalaan 14, 3722XL Bilthoven",
+      },
+    ];
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue({
         ok: true,
-        json: async () => ({ response: { docs: [mockDoc] } }),
+        json: async () => ({ response: { docs: mockDocs } }),
       }),
     );
     try {
-      const res = await GET(makeRequest("Emmalaan 12"));
+      const res = await GET(makeRequest("Emmalaan"));
       expect(res.status).toBe(200);
-      const data = await res.json() as Array<{
-        label: string;
-        postcode: string;
-        straatnaam: string;
-        huis_nlt: string;
-        neighbourhood: string;
-      }>;
+      const data = (await res.json()) as Array<{ id: string; label: string }>;
+      expect(data).toHaveLength(2);
+      expect(data[0]).toEqual({
+        id: "adr-15cf2474f4a73310b7bda0c8f4cdfd64",
+        label: "Emmalaan 12, 3722XL Bilthoven",
+      });
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("filters out docs missing id or weergavenaam", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          response: {
+            docs: [
+              { id: "adr-15cf2474f4a73310b7bda0c8f4cdfd64", weergavenaam: "Emmalaan 12, Bilthoven" },
+              { id: "adr-b2eee51ea672100c349e0ab719d68a15" }, // missing weergavenaam
+              { weergavenaam: "Foo" }, // missing id
+            ],
+          },
+        }),
+      }),
+    );
+    try {
+      const res = await GET(makeRequest("Emm"));
+      const data = (await res.json()) as Array<{ id: string; label: string }>;
       expect(data).toHaveLength(1);
-      expect(data[0].straatnaam).toBe("Emmalaan");
-      expect(data[0].postcode).toBe("3722 XL");
-      expect(data[0].neighbourhood).toBe("Bilthoven-centrum");
+      expect(data[0].id).toBe("adr-15cf2474f4a73310b7bda0c8f4cdfd64");
     } finally {
       vi.unstubAllGlobals();
     }
