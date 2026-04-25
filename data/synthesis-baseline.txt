@@ -1,8 +1,0 @@
-94 residents in the Schapenweide area responded. 71% support the development going ahead.
-
-The most decisive choice: a communal green space at the south end, chosen 3-to-1 over additional parking. The main reason residents gave: children on Nachtegaalstraat need a safe outdoor area. Multiple comments specifically mentioned the existing trees — residents want at least 3 large trees retained in whatever green space design is chosen. The neighborhood sees this as a quality-of-life issue, not just an aesthetic one.
-
-One change that would meaningfully increase support: move the main entrance away from Emmalaan. 28 residents flagged traffic on Emmalaan as a concern — particularly at school hours. A smaller access path from the Schapenweide road itself would reduce this friction significantly and likely convert several soft opponents into supporters.
-
-TODO: Replace this placeholder with a real Claude API call before the hackathon.
-Run: node scripts/generate-baseline.js
