@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
-  CONCERN_CATEGORIES,
   PERSONA_LABEL_NL,
   type CategoryStats,
   type Concern,
@@ -74,6 +73,8 @@ export default function ThemaCards({ stats, concerns }: ThemaCardsProps) {
               }}
               onMouseEnter={() => setHoveredCategory(stat.category)}
               onMouseLeave={() => setHoveredCategory(null)}
+              onFocus={() => setHoveredCategory(stat.category)}
+              onBlur={() => setHoveredCategory(null)}
               style={{
                 background: "var(--paper-0)",
                 borderRadius: "var(--radius-lg)",
@@ -199,6 +200,12 @@ function ThemaModal({
   concerns: Concern[];
   onClose: () => void;
 }) {
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [onClose]);
+
   const severityCounts: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
   for (const c of concerns) severityCounts[c.severity] = (severityCounts[c.severity] ?? 0) + 1;
   const maxSevCount = Math.max(...Object.values(severityCounts), 1);
@@ -412,8 +419,7 @@ function ThemaModal({
               <div
                 style={{ display: "flex", flexDirection: "column", gap: 8 }}
               >
-                {CONCERN_CATEGORIES.length > 0 &&
-                  (
+                {(
                     Object.entries(PERSONA_LABEL_NL) as [
                       PersonaType,
                       string,

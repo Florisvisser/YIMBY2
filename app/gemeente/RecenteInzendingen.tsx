@@ -96,6 +96,7 @@ export default function RecenteInzendingen({
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
   const inFlight = useRef<Record<string, boolean>>({});
   const suggestInFlight = useRef<Record<string, boolean>>({});
+  const bulkInFlight = useRef<Record<string, boolean>>({});
 
   const enriched = concerns.map((c) => ({
     ...c,
@@ -135,28 +136,36 @@ export default function RecenteInzendingen({
     }
   }
 
-  async function markAllAnswered(ids: string[]) {
-    const prevOverrides = { ...overrides };
+  async function markAllAnswered(category: ConcernCategory, ids: string[]) {
+    if (bulkInFlight.current[category] || ids.length === 0) return;
+    bulkInFlight.current[category] = true;
+    const prevStatuses = Object.fromEntries(
+      ids.map((id) => [id, enriched.find((c) => c.id === id)?.status ?? ("new" as ConcernStatus)]),
+    );
     setOverrides((o) => ({
       ...o,
       ...Object.fromEntries(ids.map((id) => [id, "answered" as ConcernStatus])),
     }));
-    const results = await Promise.allSettled(
-      ids.map((id) =>
-        fetch(`/api/concerns/${id}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ status: "answered" }),
-        }),
-      ),
-    );
-    results.forEach((r, i) => {
-      if (r.status === "rejected" || (r.status === "fulfilled" && !r.value.ok)) {
-        const id = ids[i];
-        setOverrides((o) => ({ ...o, [id]: prevOverrides[id] ?? ("new" as ConcernStatus) }));
-        console.warn(`[bulk-mark] PATCH mislukt voor ${ids[i]}`);
-      }
-    });
+    try {
+      const results = await Promise.allSettled(
+        ids.map((id) =>
+          fetch(`/api/concerns/${id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status: "answered" }),
+          }),
+        ),
+      );
+      results.forEach((r, i) => {
+        if (r.status === "rejected" || (r.status === "fulfilled" && !r.value.ok)) {
+          const id = ids[i];
+          setOverrides((o) => ({ ...o, [id]: prevStatuses[id] }));
+          console.warn(`[bulk-mark] PATCH mislukt voor ${ids[i]}`);
+        }
+      });
+    } finally {
+      bulkInFlight.current[category] = false;
+    }
   }
 
   async function fetchSuggestion(category: ConcernCategory, categoryEnriched: Concern[]) {
@@ -536,7 +545,7 @@ export default function RecenteInzendingen({
                   {unansweredIds.length > 0 && (
                     <button
                       type="button"
-                      onClick={() => markAllAnswered(unansweredIds)}
+                      onClick={() => markAllAnswered(category, unansweredIds)}
                       style={statusButtonStyle("moss")}
                     >
                       Markeer alle als beantwoord ({unansweredIds.length})
@@ -701,8 +710,8 @@ export default function RecenteInzendingen({
                           </div>
                           <div
                             style={{
-                              background: "var(--sky-50, #f0f9ff)",
-                              borderLeft: "3px solid var(--sky-300, #7dd3fc)",
+                              background: "var(--sky-100)",
+                              borderLeft: "3px solid var(--sky-300)",
                               borderRadius: "0 var(--radius-sm) var(--radius-sm) 0",
                               padding: "10px 14px",
                               display: "flex",
@@ -716,7 +725,7 @@ export default function RecenteInzendingen({
                                 fontWeight: 500,
                                 textTransform: "uppercase",
                                 letterSpacing: "0.12em",
-                                color: "var(--sky-600, #0284c7)",
+                                color: "var(--sky-500)",
                               }}
                             >
                               Suggestie plan-aanpassing
