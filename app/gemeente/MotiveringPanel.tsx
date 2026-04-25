@@ -1,6 +1,14 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
+import {
+  CATEGORY_LABEL_NL,
+  CONCERN_CATEGORIES,
+  type CategoryStats,
+  type Concern,
+  type ConcernCategory,
+  type ThemaAntwoordenMap,
+} from "@/lib/data/types";
 
 interface ReportSection {
   category: string;
@@ -32,14 +40,6 @@ function WarnIcon() {
   );
 }
 
-function SparkIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/>
-    </svg>
-  );
-}
-
 function CheckIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
@@ -55,7 +55,65 @@ type PublishState =
   | { status: "published"; reference: string; signedAt: string }
   | { status: "error"; error: string };
 
-export default function MotiveringPanel() {
+function assembleReport(
+  concerns: Concern[],
+  stats: CategoryStats[],
+  antwoorden: ThemaAntwoordenMap,
+): MotiveringReport {
+  const totalCount = concerns.length;
+  const sections = CONCERN_CATEGORIES.map<ReportSection>((category) => {
+    const stat = stats.find((s) => s.category === category) ?? {
+      category,
+      label: CATEGORY_LABEL_NL[category],
+      count: 0,
+      severityAverage: 0,
+      representative: null,
+    };
+    const themaConcerns = concerns.filter((c) => c.category === category);
+    const neighbourhoods = Array.from(
+      new Set(themaConcerns.map((c) => c.neighbourhood)),
+    );
+    const a = antwoorden[category];
+    const antwoordTekst = (a?.antwoord ?? "").trim();
+    const planwijzigingTekst = (a?.planwijziging ?? "").trim();
+
+    return {
+      category: CATEGORY_LABEL_NL[category],
+      concernCount: stat.count,
+      severityAverage: stat.severityAverage,
+      officialMotivation:
+        antwoordTekst ||
+        `Voor het thema ${CATEGORY_LABEL_NL[category]} is nog geen antwoord vastgelegd door de gemeente.`,
+      residentExplanation:
+        antwoordTekst ||
+        `Voor dit thema is nog geen antwoord aan bewoners voorbereid.`,
+      suggestedPlanAdjustment:
+        planwijzigingTekst ||
+        `Geen voorgestelde planwijziging vastgelegd voor ${CATEGORY_LABEL_NL[category]}.`,
+      evidenceSummary: `${stat.count} zienswijzen in dit thema · gemiddelde ernst ${stat.severityAverage.toFixed(1)} / 5${neighbourhoods.length > 0 ? ` · uit ${neighbourhoods.slice(0, 4).join(", ")}${neighbourhoods.length > 4 ? "…" : ""}` : ""}.`,
+      reviewWarnings: [],
+    };
+  });
+
+  return {
+    source: "fallback",
+    generatedAt: new Date().toISOString(),
+    title: "Concept-participatieverslag Schapenweide",
+    status: "Concept — ambtelijke review vereist",
+    summary: `Dit verslag bundelt ${totalCount} ingediende zienswijzen over vier thema's, met per thema het antwoord aan bewoners en de voorgestelde planwijziging zoals samengesteld door de gemeente.`,
+    sections,
+  };
+}
+
+export default function MotiveringPanel({
+  concerns,
+  stats,
+  antwoorden,
+}: {
+  concerns: Concern[];
+  stats: CategoryStats[];
+  antwoorden: ThemaAntwoordenMap;
+}) {
   const [loading, setLoading] = useState(false);
   const [report, setReport] = useState<MotiveringReport | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -105,21 +163,31 @@ export default function MotiveringPanel() {
     setSignModalOpen(false);
   }
 
-  const handleClick = async () => {
-    if (requestInFlight.current) return;
+  const filledThemas = useMemo(() => {
+    const filled: ConcernCategory[] = [];
+    for (const cat of CONCERN_CATEGORIES) {
+      const a = antwoorden[cat];
+      if ((a?.antwoord ?? "").trim().length > 0) filled.push(cat);
+    }
+    return filled;
+  }, [antwoorden]);
+
+  const missingThemas = CONCERN_CATEGORIES.filter(
+    (c) => !filledThemas.includes(c),
+  );
+  const allFilled = missingThemas.length === 0;
+
+  const handleClick = () => {
+    if (requestInFlight.current || !allFilled) return;
     requestInFlight.current = true;
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/motivering", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ projectId: "schapenweide" }),
-      });
-      const data = await res.json();
-      setReport(data);
-    } catch {
-      setError("Verslag kon niet worden gegenereerd. Probeer opnieuw.");
+      const assembled = assembleReport(concerns, stats, antwoorden);
+      setReport(assembled);
+    } catch (err) {
+      console.warn("[MotiveringPanel] assembleReport faalde:", err);
+      setError("Verslag kon niet worden samengesteld.");
     } finally {
       setLoading(false);
       requestInFlight.current = false;
@@ -140,7 +208,7 @@ export default function MotiveringPanel() {
           gap: 16,
         }}>
           <div style={{ fontSize: 11, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.18em", color: "var(--fg-tertiary)" }}>
-            AI-motivering
+            Verslag
           </div>
           <h2 style={{
             margin: 0,
@@ -151,51 +219,88 @@ export default function MotiveringPanel() {
             color: "var(--ink-900)",
             fontVariationSettings: "'opsz' 144, 'SOFT' 50",
           }}>
-            Genereer een concept-verslag uit alle zienswijzen
+            Rond alle zienswijzen af in één verslag
           </h2>
           <p style={{ margin: 0, fontSize: 14.5, lineHeight: 1.6, color: "var(--fg-secondary)", maxWidth: 640 }}>
-            Eén Claude-call. Per thema een ambtelijke motivering, een B1-uitleg voor bewoners, en concrete review-aandachtspunten. U reviewt en ondertekent.
+            Het verslag bundelt per thema de zienswijzen, jouw antwoord aan bewoners en de voorgestelde planwijziging. U reviewt en ondertekent.
           </p>
+
+          {/* Per-thema checklist */}
+          <ul
+            style={{
+              margin: 0,
+              padding: 0,
+              listStyle: "none",
+              display: "flex",
+              flexDirection: "column",
+              gap: 6,
+            }}
+          >
+            {CONCERN_CATEGORIES.map((cat) => {
+              const a = antwoorden[cat];
+              const isFilled = (a?.antwoord ?? "").trim().length > 0;
+              return (
+                <li
+                  key={cat}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                    fontSize: 13,
+                    color: isFilled ? "var(--ink-700)" : "var(--fg-muted)",
+                  }}
+                >
+                  <span
+                    style={{
+                      width: 16,
+                      display: "inline-flex",
+                      justifyContent: "center",
+                      color: isFilled ? "var(--moss-500)" : "var(--fg-muted)",
+                      fontWeight: 600,
+                    }}
+                  >
+                    {isFilled ? "✓" : "○"}
+                  </span>
+                  <span>{CATEGORY_LABEL_NL[cat]}</span>
+                  {!isFilled && (
+                    <span style={{ fontSize: 12, color: "var(--fg-muted)", marginLeft: 4 }}>
+                      — vul antwoord in via deepdive
+                    </span>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
 
           <button
             onClick={handleClick}
-            disabled={loading}
+            disabled={loading || !allFilled}
             style={{
               alignSelf: "flex-start",
               padding: "14px 22px",
               borderRadius: "var(--radius-md)",
-              background: loading ? "var(--moss-600)" : "var(--moss-500)",
-              color: "var(--paper-50)",
+              background: !allFilled ? "var(--paper-100)" : loading ? "var(--moss-600)" : "var(--moss-500)",
+              color: !allFilled ? "var(--fg-muted)" : "var(--paper-50)",
               border: "none",
               fontFamily: "var(--font-sans)",
               fontSize: 15,
               fontWeight: 500,
-              cursor: loading ? "wait" : "pointer",
+              cursor: !allFilled ? "not-allowed" : loading ? "wait" : "pointer",
               boxShadow: "var(--shadow-sm)",
               display: "inline-flex",
               alignItems: "center",
               gap: 8,
-              position: "relative",
-              overflow: "hidden",
               minWidth: 240,
               transition: `background var(--dur-fast) var(--ease-out)`,
             }}
           >
-            <SparkIcon />
-            {loading ? "Verslag wordt gegenereerd…" : "Genereer concept-verslag"}
-            {loading && (
-              <span style={{
-                position: "absolute",
-                inset: 0,
-                background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent)",
-                animation: "shimmer 1.4s linear infinite",
-              }} />
-            )}
+            <CheckIcon />
+            Stel verslag samen
           </button>
 
-          {loading && (
-            <p style={{ margin: 0, fontSize: 13, color: "var(--fg-muted)" }}>
-              Dit duurt ongeveer 60–90 seconden.
+          {!allFilled && (
+            <p style={{ margin: 0, fontSize: 12, color: "var(--fg-muted)" }}>
+              Vul nog {missingThemas.length} thema{missingThemas.length === 1 ? "" : "&apos;s"} in om het verslag samen te stellen.
             </p>
           )}
         </div>
