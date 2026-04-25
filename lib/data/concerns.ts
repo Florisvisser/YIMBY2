@@ -21,8 +21,8 @@ export async function getConcerns(): Promise<Concern[]> {
   ]);
   const seedItems = seeded.status === "fulfilled" ? seeded.value : [];
   const dbItems = supabase.status === "fulfilled" ? supabase.value : [];
-  return [...seedItems, ...dbItems].sort((a, b) =>
-    b.submittedAt.localeCompare(a.submittedAt),
+  return [...seedItems, ...dbItems].sort(
+    (a, b) => Date.parse(b.submittedAt) - Date.parse(a.submittedAt),
   );
 }
 

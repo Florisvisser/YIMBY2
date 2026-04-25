@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   CATEGORY_LABEL_NL,
   type ConcernCategory,
@@ -49,9 +49,13 @@ export default function BurgerForm() {
   const [submitLoading, setSubmitLoading] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
+  const lookupInFlight = useRef(false);
+  const submitInFlight = useRef(false);
+
   async function handleLookup(e: React.FormEvent) {
     e.preventDefault();
-    if (addressLoading) return;
+    if (lookupInFlight.current) return;
+    lookupInFlight.current = true;
     setAddressError(null);
     setAddressLoading(true);
     try {
@@ -76,13 +80,15 @@ export default function BurgerForm() {
       setAddressError("Verbinding met PDOK mislukt. Probeer opnieuw.");
     } finally {
       setAddressLoading(false);
+      lookupInFlight.current = false;
     }
   }
 
   async function handleSubmit() {
-    if (submitLoading) return;
+    if (submitInFlight.current) return;
     if (!address || !category) return;
     if (concernText.length < MIN_TEXT) return;
+    submitInFlight.current = true;
 
     setSubmitError(null);
     setSubmitLoading(true);
@@ -113,6 +119,7 @@ export default function BurgerForm() {
       setSubmitError("Verbinding mislukt. Probeer opnieuw.");
     } finally {
       setSubmitLoading(false);
+      submitInFlight.current = false;
     }
   }
 

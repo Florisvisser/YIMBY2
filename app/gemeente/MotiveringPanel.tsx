@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 interface ReportSection {
   category: string;
@@ -26,9 +26,11 @@ export default function MotiveringPanel() {
   const [loading, setLoading] = useState(false);
   const [report, setReport] = useState<MotiveringReport | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const requestInFlight = useRef(false);
 
   const handleClick = async () => {
-    if (loading) return;
+    if (requestInFlight.current) return;
+    requestInFlight.current = true;
     setLoading(true);
     setError(null);
     try {
@@ -43,6 +45,7 @@ export default function MotiveringPanel() {
       setError("Verslag kon niet worden gegenereerd. Probeer opnieuw.");
     } finally {
       setLoading(false);
+      requestInFlight.current = false;
     }
   };
 

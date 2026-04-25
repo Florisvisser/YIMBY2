@@ -65,12 +65,14 @@ export async function GET(request: Request) {
     pdokRes = await fetch(pdokUrl.toString(), {
       headers: { Accept: "application/json" },
       cache: "no-store",
+      signal: AbortSignal.timeout(5000),
     });
   } catch (err) {
-    console.warn("[/api/pdok] netwerkfout:", err);
+    const isAbort = err instanceof DOMException && err.name === "TimeoutError";
+    console.warn("[/api/pdok] fetch faalde:", err);
     return Response.json(
-      { error: "PDOK is niet bereikbaar." },
-      { status: 502 },
+      { error: isAbort ? "PDOK reageerde niet binnen 5 seconden." : "PDOK is niet bereikbaar." },
+      { status: 504 },
     );
   }
 
