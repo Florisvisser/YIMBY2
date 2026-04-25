@@ -1,36 +1,60 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Samenspraak
 
-## Getting Started
+Burgerparticipatie als bewijsbare feedback-loop, niet als juridisch vinkje.
 
-First, run the development server:
+Hackathon-demo voor het Schapenweide-project (Bilthoven). De app laat zien hoe burgerzorgen geclusterd worden tot een ambtelijk concept-participatieverslag (motivering), en geeft burgers daarop terug-zicht.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Demo loop
+
+```
+Burger dient zorg in
+  → gemeente ziet geclusterd dashboard
+  → "Genereer verslag" produceert concept-motivering (Claude)
+  → burger ziet wat ermee gebeurt
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Lokaal draaien
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm install
+cp .env.example .env.local   # vul ANTHROPIC_API_KEY in (optioneel)
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Open http://localhost:3000.
 
-## Learn More
+- Zonder `ANTHROPIC_API_KEY` werkt de app op een deterministische JSON-fallback (zelfde shape als Claude output). Demo-veilig.
+- Met key: één Claude-call (Sonnet 4.6) genereert een 4-secties motivering.
 
-To learn more about Next.js, take a look at the following resources:
+## Routes
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Route | Doel |
+|---|---|
+| `/` | Landing |
+| `/gemeente` | Dashboard voor de ambtenaar (Marieke) — Phase 1 |
+| `/burger` | Burger-flow (Achmed) — Phase 2 |
+| `/api/seeded-concerns` | `GET` alle 50 seeded concerns |
+| `/api/motivering` | `POST` één Claude-call → concept verslag |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Scripts
 
-## Deploy on Vercel
+```bash
+npm run dev       # lokaal draaien
+npm run lint      # eslint
+npm run build     # productie build (draai dit voor je commit)
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Stack
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Next.js 16 (App Router) — let op: dit is **niet** Next.js 13/14, conventies wijken af. Lees `node_modules/next/dist/docs/` voor je code wijzigt.
+- React 19, TypeScript strict, Tailwind v4
+- `@anthropic-ai/sdk` voor de Claude-call
+- `zod` voor schema-validatie van Claude output
+
+## Deploy
+
+Vercel. Set `ANTHROPIC_API_KEY` als environment variable (Production + Preview).
+
+## Build-plan
+
+Volledige hackathon-strategie staat in `samenspraak_hackathon_build_test_plan.md`. Werkverdeling en best-practices voor AI-pair-coding staan in `AGENTS.md`.
