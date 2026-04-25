@@ -1,13 +1,6 @@
 import { getConcerns, getCategoryStats } from "@/lib/data/concerns";
 import MotiveringPanel from "./MotiveringPanel";
 
-const CATEGORY_LABELS: Record<string, string> = {
-  traffic_parking: "Verkeer & parkeren",
-  building_height: "Bouwhoogte & uitzicht",
-  green_nature: "Groen & natuur",
-  noise_livability: "Geluid & leefbaarheid",
-};
-
 export default async function GemeentePage() {
   const concerns = await getConcerns();
   const stats = getCategoryStats(concerns);
@@ -51,10 +44,10 @@ export default async function GemeentePage() {
               >
                 <div className="flex items-start justify-between gap-4">
                   <h3 className="font-medium text-neutral-900 leading-tight">
-                    {CATEGORY_LABELS[stat.category] ?? stat.category}
+                    {stat.label}
                   </h3>
                   <span className="shrink-0 text-xs font-medium bg-neutral-100 text-neutral-600 rounded-full px-2.5 py-1">
-                    {stat.concernCount} zienswijzen
+                    {stat.count} zienswijzen
                   </span>
                 </div>
 
@@ -65,9 +58,9 @@ export default async function GemeentePage() {
                   </span>
                 </p>
 
-                {stat.topConcern && (
+                {stat.representative && (
                   <blockquote className="border-l-2 border-neutral-200 pl-3 text-sm text-neutral-500 italic leading-relaxed">
-                    &ldquo;{stat.topConcern.concernText}&rdquo;
+                    &ldquo;{stat.representative.concernText}&rdquo;
                   </blockquote>
                 )}
               </div>
