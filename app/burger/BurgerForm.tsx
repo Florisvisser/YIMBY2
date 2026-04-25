@@ -267,6 +267,17 @@ export default function BurgerForm() {
         setSubmitError(typeof data?.error === "string" ? data.error : "Zienswijze kon niet worden opgeslagen.");
         return;
       }
+      try {
+        const key = "samenspraak.submissions.v1";
+        const raw = window.localStorage.getItem(key);
+        const ids: string[] = raw ? (JSON.parse(raw) as string[]) : [];
+        if (typeof data?.id === "string" && !ids.includes(data.id)) {
+          ids.push(data.id);
+          window.localStorage.setItem(key, JSON.stringify(ids));
+        }
+      } catch {
+        // localStorage kan falen (private mode, full quota) — niet kritiek voor demo.
+      }
       setStep("done");
     } catch {
       setSubmitError("Verbinding mislukt. Probeer opnieuw.");
@@ -323,7 +334,7 @@ export default function BurgerForm() {
         </div>
 
         <Link
-          href="/gemeente"
+          href="/burger/mijn-zorgen"
           style={{
             display: "flex",
             alignItems: "center",
@@ -340,7 +351,7 @@ export default function BurgerForm() {
             boxShadow: "var(--shadow-sm)",
           }}
         >
-          Bekijk het dashboard
+          Bekijk mijn zorgen
           <ArrowIcon />
         </Link>
       </div>
