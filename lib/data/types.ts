@@ -68,6 +68,48 @@ export type MotiveringRequest = {
   forceFallback?: boolean;
 };
 
+export type SuggestResult = {
+  label: string;
+  postcode: string;
+  straatnaam: string;
+  huis_nlt: string;
+  neighbourhood: string;
+};
+
+export type ProfileData = {
+  voornaam: string;
+  achternaam: string;
+  leeftijd: number;
+  postcode: string;
+  neighbourhood: string;
+  straatnaam: string;
+  huis_nlt: string;
+};
+
+export type PlanUitlegSection = {
+  category: ConcernCategory;
+  headline: string;
+  bodyText: string;
+  impactLevel: "laag" | "gemiddeld" | "hoog";
+};
+
+export type PlanUitlegReport = {
+  source: "claude" | "fallback";
+  generatedAt: string;
+  intro: string;
+  sections: PlanUitlegSection[];
+};
+
+export type ChatMessage = {
+  role: "user" | "assistant";
+  content: string;
+};
+
+export type VraagResponse = {
+  answer: string;
+  source: "claude" | "fallback";
+};
+
 export type ConcernWithAnswer = Concern & {
   verslagAnswer?: string;
   verslagSignedAt?: string;
