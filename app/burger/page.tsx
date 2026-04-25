@@ -15,7 +15,7 @@ export default function BurgerPage() {
     <div style={{ minHeight: "100vh", background: "var(--paper-50)", display: "flex", flexDirection: "column", fontFamily: "var(--font-sans)" }}>
       {/* Header */}
       <header style={{
-        padding: "20px 24px",
+        paddingTop: 20, paddingBottom: 20, paddingLeft: 24, paddingRight: 24,
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
@@ -45,7 +45,7 @@ export default function BurgerPage() {
       </header>
 
       {/* Content */}
-      <main style={{ flex: 1, display: "flex", justifyContent: "center", padding: "48px 24px" }}>
+      <main style={{ flex: 1, display: "flex", justifyContent: "center", paddingTop: 48, paddingBottom: 48, paddingLeft: 24, paddingRight: 24 }}>
         <div style={{ width: "100%", maxWidth: 480 }}>
           <BurgerForm />
         </div>
@@ -53,7 +53,7 @@ export default function BurgerPage() {
 
       {/* Footer */}
       <footer style={{
-        padding: "20px 24px",
+        paddingTop: 20, paddingBottom: 20, paddingLeft: 24, paddingRight: 24,
         textAlign: "center",
         fontSize: 12,
         color: "var(--fg-muted)",

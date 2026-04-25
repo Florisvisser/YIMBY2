@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   PERSONA_LABEL_NL,
   type CategoryStats,
@@ -220,7 +221,7 @@ function ThemaModal({
     (a, b) => b[1] - a[1],
   );
 
-  return (
+  return createPortal(
     <div
       role="dialog"
       aria-modal="true"
@@ -601,7 +602,8 @@ function ThemaModal({
           </>
         )}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 

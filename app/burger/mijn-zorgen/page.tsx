@@ -30,7 +30,7 @@ export default function MijnZorgenPage() {
     >
       <header
         style={{
-          padding: "20px 24px",
+          paddingTop: 20, paddingBottom: 20, paddingLeft: 24, paddingRight: 24,
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
@@ -78,7 +78,7 @@ export default function MijnZorgenPage() {
           maxWidth: 720,
           width: "100%",
           margin: "0 auto",
-          padding: "48px 24px",
+          paddingTop: 48, paddingBottom: 48, paddingLeft: 24, paddingRight: 24,
         }}
       >
         <p
@@ -122,7 +122,7 @@ export default function MijnZorgenPage() {
 
       <footer
         style={{
-          padding: "20px 24px",
+          paddingTop: 20, paddingBottom: 20, paddingLeft: 24, paddingRight: 24,
           textAlign: "center",
           fontSize: 12,
           color: "var(--fg-muted)",
