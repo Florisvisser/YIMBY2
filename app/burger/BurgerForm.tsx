@@ -324,6 +324,7 @@ export default function BurgerForm() {
     if (planUitlegInFlight.current) return;
     planUitlegInFlight.current = true;
     setPlanUitlegLoading(true);
+    setStep("plan_uitleg");
     try {
       const res = await fetch("/api/plan-uitleg", {
         method: "POST",
@@ -377,7 +378,6 @@ export default function BurgerForm() {
     } finally {
       setPlanUitlegLoading(false);
       planUitlegInFlight.current = false;
-      setStep("plan_uitleg");
     }
   }
 
@@ -651,7 +651,10 @@ export default function BurgerForm() {
 
         {/* Step: profile */}
         {step === "profile" && (
-          <ProfileStep onComplete={handleProfileComplete} />
+          <ProfileStep
+            onComplete={handleProfileComplete}
+            initial={profile ?? undefined}
+          />
         )}
 
         {/* Step: plan uitleg */}

@@ -6,12 +6,16 @@ import { Eyebrow, DisplayH1, Lead, InputField, PrimaryBtn } from "../ui";
 
 export default function ProfileStep({
   onComplete,
+  initial,
 }: {
   onComplete: (data: ProfileData) => void;
+  initial?: ProfileData;
 }) {
-  const [voornaam, setVoornaam] = useState("");
-  const [achternaam, setAchternaam] = useState("");
-  const [leeftijdRaw, setLeeftijdRaw] = useState("");
+  const [voornaam, setVoornaam] = useState(initial?.voornaam ?? "");
+  const [achternaam, setAchternaam] = useState(initial?.achternaam ?? "");
+  const [leeftijdRaw, setLeeftijdRaw] = useState(
+    initial?.leeftijd ? String(initial.leeftijd) : "",
+  );
 
   const [addressInput, setAddressInput] = useState("");
   const [suggestions, setSuggestions] = useState<SuggestResult[]>([]);
