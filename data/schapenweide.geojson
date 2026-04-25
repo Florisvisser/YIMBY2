@@ -1,0 +1,22 @@
+{
+  "type": "Feature",
+  "properties": {
+    "name": "Schapenweide",
+    "municipality": "De Bilt",
+    "province": "Utrecht",
+    "area_m2": 8500,
+    "note": "TODO: Replace with exact parcel polygon from kadastralekaart.nl before hackathon"
+  },
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [5.1935, 52.1095],
+        [5.1955, 52.1095],
+        [5.1955, 52.1110],
+        [5.1935, 52.1110],
+        [5.1935, 52.1095]
+      ]
+    ]
+  }
+}

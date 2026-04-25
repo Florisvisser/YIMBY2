@@ -1,65 +1,133 @@
-import Image from "next/image";
+"use client";
+
+import { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
+import FeedbackForm from "./components/FeedbackForm";
+import SynthesisPanel from "./components/SynthesisPanel";
+import type { Response } from "./lib/types";
+
+// Map must be loaded client-side only — Leaflet needs window
+const SchapenweideMap = dynamic(() => import("./components/SchapenweideMap"), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full rounded-xl bg-stone-100 animate-pulse" style={{ height: "360px" }} />
+  ),
+});
+
+const SEEDED_COUNT = 94;
 
 export default function Home() {
+  const [synthesis, setSynthesis] = useState("");
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [liveResponses, setLiveResponses] = useState<Response[]>([]);
+  const [submitted, setSubmitted] = useState(false);
+
+  // Load baseline synthesis on mount
+  useEffect(() => {
+    fetch("/api/synthesize", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ seeded_count: SEEDED_COUNT, live_responses: [] }),
+    })
+      .then((r) => r.text())
+      .then((text) => setSynthesis(text))
+      .catch(() => {});
+  }, []);
+
+  async function handleSubmit(responses: Response[]) {
+    setIsStreaming(true);
+    setLiveResponses(responses);
+    setSynthesis("");
+
+    try {
+      const res = await fetch("/api/synthesize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          seeded_count: SEEDED_COUNT,
+          live_responses: responses,
+        }),
+      });
+
+      if (!res.body) throw new Error("No stream");
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let text = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        text += decoder.decode(value, { stream: true });
+        setSynthesis(text);
+      }
+
+      setSubmitted(true);
+    } catch {
+      setSynthesis("Something went wrong. Please try again.");
+    } finally {
+      setIsStreaming(false);
+    }
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <main className="min-h-screen bg-stone-50">
+      {/* Header */}
+      <header className="bg-white border-b border-stone-200 px-6 py-4">
+        <div className="max-w-2xl mx-auto flex items-center gap-3">
+          <span className="text-2xl font-bold text-amber-500">YIMBY</span>
+          <span className="text-stone-400 text-sm">Yes, in my backyard</span>
+        </div>
+      </header>
+
+      <div className="max-w-2xl mx-auto px-4 py-8 space-y-8">
+        {/* Project intro */}
+        <section>
+          <h1 className="text-2xl font-bold text-stone-900 mb-1">Schapenweide, Bilthoven</h1>
+          <p className="text-stone-500 text-sm mb-4">De Bilt · Utrecht · 10 years without development</p>
+          <p className="text-stone-700 leading-relaxed">
+            This plot has been ready for housing for over a decade. Legal proceedings and hardened
+            objections have kept it empty. <strong>YIMBY asks the neighbourhood first</strong> — before
+            plans are finalised, before positions harden.
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+          <p className="text-stone-700 leading-relaxed mt-2">
+            Answer 4 design questions below. Your preferences are shared anonymously with the developer
+            and municipality — giving the silent majority a voice in what gets built here.
+          </p>
+        </section>
+
+        {/* Map */}
+        <section>
+          <SchapenweideMap />
+          <p className="text-xs text-stone-400 mt-2">
+            Map data © Kadaster / OpenStreetMap contributors
+          </p>
+        </section>
+
+        {/* Current synthesis */}
+        {synthesis && (
+          <SynthesisPanel
+            text={synthesis}
+            isStreaming={isStreaming}
+            responseCount={SEEDED_COUNT + liveResponses.length}
+          />
+        )}
+
+        {/* Feedback form */}
+        {!submitted ? (
+          <section>
+            <h2 className="text-lg font-semibold text-stone-800 mb-4">Your preferences</h2>
+            <FeedbackForm onSubmit={handleSubmit} disabled={isStreaming} />
+          </section>
+        ) : (
+          <div className="rounded-xl bg-amber-50 border border-amber-200 p-5 text-center">
+            <p className="text-amber-800 font-semibold">Thanks for your input.</p>
+            <p className="text-amber-700 text-sm mt-1">
+              Your preferences have been added to the neighbourhood summary above.
+            </p>
+          </div>
+        )}
+      </div>
+    </main>
   );
 }
