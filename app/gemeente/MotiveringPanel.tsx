@@ -58,7 +58,7 @@ export default function MotiveringPanel() {
         </button>
         {loading && (
           <p className="text-sm text-neutral-400">
-            Dit duurt maximaal 30 seconden.
+            Dit duurt ongeveer 60–90 seconden.
           </p>
         )}
       </div>

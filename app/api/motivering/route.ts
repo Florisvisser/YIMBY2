@@ -12,6 +12,7 @@ export const runtime = "nodejs";
 export const maxDuration = 120;
 
 const MODEL = "claude-sonnet-4-6";
+const TIMEOUT_MS = 110_000;
 
 function extractJson(text: string): string {
   const trimmed = text.trim();
@@ -24,13 +25,19 @@ async function tryClaude(prompt: string): Promise<MotiveringReport | null> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return null;
 
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+
   try {
     const client = new Anthropic({ apiKey });
-    const message = await client.messages.create({
-      model: MODEL,
-      max_tokens: 4096,
-      messages: [{ role: "user", content: prompt }],
-    });
+    const message = await client.messages.create(
+      {
+        model: MODEL,
+        max_tokens: 8192,
+        messages: [{ role: "user", content: prompt }],
+      },
+      { signal: controller.signal },
+    );
 
     const textBlock = message.content.find((b) => b.type === "text");
     if (!textBlock || textBlock.type !== "text") return null;
@@ -46,6 +53,8 @@ async function tryClaude(prompt: string): Promise<MotiveringReport | null> {
   } catch (err) {
     console.warn("[motivering] Claude call faalde, fallback ingezet:", err);
     return null;
+  } finally {
+    clearTimeout(timer);
   }
 }
 
