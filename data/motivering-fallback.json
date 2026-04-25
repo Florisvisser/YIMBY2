@@ -1,0 +1,62 @@
+{
+  "source": "fallback",
+  "generatedAt": "2026-04-25T10:00:00+02:00",
+  "title": "Concept-participatieverslag Schapenweide",
+  "status": "Concept — ambtelijke review vereist",
+  "summary": "Op basis van 50 binnengekomen reacties van bewoners van Bilthoven rond het Schapenweide-project tekenen zich vier hoofdthema's af: verkeer & parkeren, bouwhoogte & uitzicht, groen & natuur, en geluid & leefbaarheid. Dit concept beschrijft per thema de ambtelijke afweging, een uitleg voor bewoners, en een voorgestelde plan-aanpassing. Het verslag voldoet aan de motiveringsplicht uit de Omgevingswet (artikel 16.32) maar vereist juridische en verkeerskundige toetsing voor publicatie.",
+  "sections": [
+    {
+      "category": "Verkeer & parkeren",
+      "concernCount": 13,
+      "severityAverage": 3.8,
+      "officialMotivation": "Het college constateert dat 13 bewoners (gemiddelde ernst 3.8/5) een verhoogde verkeers- en parkeerdruk verwachten op de Emmalaan en Nachtegaalstraat. In overeenstemming met de mobiliteitsparagraaf van het bestemmingsplan en artikel 5.78 Bkl wordt voorgesteld een aanvullende verkeerskundige doorrekening uit te voeren voor de aansluiting op de Soestdijkseweg.",
+      "residentExplanation": "Veel buurtbewoners maken zich zorgen dat de straten rondom de Schapenweide vol komen te staan, vooral op schooltijden. We nemen dit serieus en laten een verkeerskundige opnieuw rekenen voordat we de plannen vaststellen.",
+      "suggestedPlanAdjustment": "Toevoegen van een aanvullende verkeerskundige doorrekening en een minimale parkeernorm van 1.4 plek per woning, met expliciete bewonersparkeerplekken aan de Emmalaan-zijde.",
+      "evidenceSummary": "13 reacties, gemiddelde ernst 3.8/5, geclusterd rond Emmalaan (8x) en Nachtegaalstraat (3x). Kerntermen: ophaalmoment school, doorgaand verkeer Soestdijkseweg, gebrek aan bezoekersparkeren.",
+      "reviewWarnings": [
+        "Verkeerskundige doorrekening ontbreekt nog — afhankelijkheid bij Mobycon",
+        "Juridische toetsing parkeernorm tegen Beleidsregels Parkeren Gemeente De Bilt vereist"
+      ]
+    },
+    {
+      "category": "Bouwhoogte & uitzicht",
+      "concernCount": 12,
+      "severityAverage": 3.2,
+      "officialMotivation": "12 bewoners (gemiddelde ernst 3.2/5) noemen de voorgestelde bouwhoogte van vier lagen als bezwaar, met name vanuit de Nachtegaalstraat en Vinkenlaan. Conform artikel 5.161 Bkl en de Welstandsnota Bilthoven-Centrum is een schaduw- en bezonningsstudie vereist alvorens definitieve hoogtes vast te stellen.",
+      "residentExplanation": "Bewoners aan de noord- en oostzijde maken zich zorgen over uitzicht en zoninval. Voor we de hoogtes definitief maken laten we een bezonningsstudie doen, en kijken we of de bovenste laag terug kan op de hoek bij de Nachtegaalstraat.",
+      "suggestedPlanAdjustment": "Bezonningsstudie als verplichte bijlage bij het bestemmingsplan; onderzoek naar setback van de bovenste bouwlaag aan de noordzijde van het plan.",
+      "evidenceSummary": "12 reacties, gemiddelde ernst 3.2/5, voornamelijk uit Nachtegaalstraat en Vinkenlaan. Kerntermen: schaduwwerking middag, uitzicht op groen, hoogte-overgang naar bestaande bebouwing.",
+      "reviewWarnings": [
+        "Bezonningsstudie nog niet gestart — capaciteit bij stedenbouw beperkt",
+        "Welstandscommissie heeft nog geen advies uitgebracht"
+      ]
+    },
+    {
+      "category": "Groen & natuur",
+      "concernCount": 13,
+      "severityAverage": 4.2,
+      "officialMotivation": "13 bewoners (gemiddelde ernst 4.2/5 — hoogste van alle thema's) wijzen op de aanwezige dassenburcht aan de westrand en op de waarde van de bestaande boomstructuur. Op grond van artikel 11.54 Bal en de Wet natuurbescherming is een natuurtoets door een ecologisch bureau verplicht voor het ontwerp definitief wordt.",
+      "residentExplanation": "De Schapenweide heeft een dassenburcht en oude bomen die mensen belangrijk vinden. Voor we beginnen laten we eerst een natuuronderzoek doen. Als dassen op de plek zitten passen we het ontwerp aan — we gaan ze niet verstoren.",
+      "suggestedPlanAdjustment": "Natuurtoets opnemen als aanvullend onderzoek; verplichte buffer van 30 meter rond de dassenburcht; behoud van minimaal 60% van de bestaande bomen langs de westrand.",
+      "evidenceSummary": "13 reacties, gemiddelde ernst 4.2/5. Kerntermen: dassenburcht, oude bomen, biodiversiteit, geen versteening, regenwaterafvoer. Dit thema heeft de hoogste gemiddelde ernst.",
+      "reviewWarnings": [
+        "Natuurtoets is wettelijk verplicht — zonder dit géén onherroepelijk besluit",
+        "Aanvraag bij ecologisch bureau nog niet ingediend",
+        "Mogelijke vertraging vergunningverlening van 8–12 weken"
+      ]
+    },
+    {
+      "category": "Geluid & leefbaarheid",
+      "concernCount": 12,
+      "severityAverage": 3.4,
+      "officialMotivation": "12 bewoners (gemiddelde ernst 3.4/5) benoemen geluidsoverlast tijdens de bouwfase en zorgen over leefbaarheid in de gebruiksfase. Conform artikel 5.74 Bkl geldt een zorgplicht voor de bouwperiode; aanvullend wordt voorgesteld een bouwlogistiek-plan met afspraken over werktijden vast te stellen.",
+      "residentExplanation": "Bouwen geeft herrie. We snappen dat dat vervelend is, vooral als je in de buurt werkt of een winkel hebt. We maken vooraf afspraken over werktijden — niet in de avonden en niet in het weekend, behalve in noodgevallen.",
+      "suggestedPlanAdjustment": "Bouwlogistiek-plan met werktijden ma–vr 07:00–17:00, geen werk op zondag; toetsmoment overlast halverwege bouwfase met buurtoverleg.",
+      "evidenceSummary": "12 reacties, gemiddelde ernst 3.4/5. Kerntermen: bouwlawaai, weekendrust, omzetverlies winkels, kwetsbare bewoners (ouderen, gezinnen met jonge kinderen).",
+      "reviewWarnings": [
+        "Bouwlogistiek-plan is afhankelijk van uitvoerende aannemer — nog niet aanbesteed",
+        "Geluidberekening bouwfase ontbreekt"
+      ]
+    }
+  ]
+}
