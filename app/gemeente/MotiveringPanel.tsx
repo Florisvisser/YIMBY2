@@ -48,11 +48,38 @@ function CheckIcon() {
   );
 }
 
+function generateReferentie(): string {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let suffix = "";
+  for (let i = 0; i < 4; i += 1) {
+    suffix += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return `SP-2026-${suffix}`;
+}
+
 export default function MotiveringPanel() {
   const [loading, setLoading] = useState(false);
   const [report, setReport] = useState<MotiveringReport | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [signModalOpen, setSignModalOpen] = useState(false);
+  const [pendingRef, setPendingRef] = useState<string | null>(null);
+  const [signedRef, setSignedRef] = useState<string | null>(null);
   const requestInFlight = useRef(false);
+
+  function openSignModal() {
+    setPendingRef(generateReferentie());
+    setSignModalOpen(true);
+  }
+
+  function confirmSign() {
+    if (pendingRef) setSignedRef(pendingRef);
+    setSignModalOpen(false);
+  }
+
+  function cancelSign() {
+    setSignModalOpen(false);
+    setPendingRef(null);
+  }
 
   const handleClick = async () => {
     if (requestInFlight.current) return;
@@ -321,25 +348,53 @@ export default function MotiveringPanel() {
           </div>
 
           {/* Action buttons */}
-          <div style={{ display: "flex", gap: 10, marginTop: 4, flexWrap: "wrap" }}>
-            <button style={{
-              padding: "12px 20px",
-              borderRadius: "var(--radius-md)",
-              background: "var(--moss-500)",
-              color: "var(--paper-50)",
-              border: "none",
-              fontFamily: "var(--font-sans)",
-              fontSize: 14,
-              fontWeight: 500,
-              cursor: "pointer",
-              boxShadow: "var(--shadow-sm)",
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 8,
-            }}>
-              <CheckIcon />
-              Onderteken &amp; publiceer
-            </button>
+          <div style={{ display: "flex", gap: 10, marginTop: 4, flexWrap: "wrap", alignItems: "center" }}>
+            {signedRef ? (
+              <span
+                style={{
+                  padding: "12px 20px",
+                  borderRadius: "var(--radius-md)",
+                  background: "var(--moss-50)",
+                  color: "var(--moss-700)",
+                  fontFamily: "var(--font-sans)",
+                  fontSize: 14,
+                  fontWeight: 500,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 8,
+                  boxShadow: "var(--shadow-hairline)",
+                }}
+              >
+                <CheckIcon />
+                Gepubliceerd ·{" "}
+                <span style={{ fontFamily: "var(--font-mono)", fontVariantNumeric: "tabular-nums" }}>
+                  {signedRef}
+                </span>
+              </span>
+            ) : (
+              <button
+                type="button"
+                onClick={openSignModal}
+                style={{
+                  padding: "12px 20px",
+                  borderRadius: "var(--radius-md)",
+                  background: "var(--moss-500)",
+                  color: "var(--paper-50)",
+                  border: "none",
+                  fontFamily: "var(--font-sans)",
+                  fontSize: 14,
+                  fontWeight: 500,
+                  cursor: "pointer",
+                  boxShadow: "var(--shadow-sm)",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 8,
+                }}
+              >
+                <CheckIcon />
+                Onderteken &amp; publiceer
+              </button>
+            )}
             <button style={{
               padding: "12px 20px",
               borderRadius: "var(--radius-md)",
@@ -370,6 +425,135 @@ export default function MotiveringPanel() {
             >
               Opnieuw genereren
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Onderteken & publiceer modal */}
+      {signModalOpen && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="sign-modal-title"
+          onClick={cancelSign}
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(26, 22, 18, 0.45)",
+            backdropFilter: "blur(4px)",
+            WebkitBackdropFilter: "blur(4px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 24,
+            zIndex: 50,
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: "var(--paper-0)",
+              borderRadius: "var(--radius-xl)",
+              padding: 28,
+              boxShadow: "var(--shadow-md), var(--shadow-hairline)",
+              maxWidth: 440,
+              width: "100%",
+              display: "flex",
+              flexDirection: "column",
+              gap: 16,
+            }}
+          >
+            <p style={{
+              margin: 0,
+              fontSize: 11,
+              fontWeight: 500,
+              textTransform: "uppercase",
+              letterSpacing: "0.18em",
+              color: "var(--fg-tertiary)",
+            }}>
+              Officiële publicatie
+            </p>
+            <h3
+              id="sign-modal-title"
+              style={{
+                margin: 0,
+                fontFamily: "var(--font-display)",
+                fontSize: 24,
+                fontWeight: 500,
+                letterSpacing: "-0.01em",
+                color: "var(--ink-900)",
+                fontVariationSettings: "'opsz' 144, 'SOFT' 50",
+              }}
+            >
+              Onderteken & publiceer
+            </h3>
+            <p style={{ margin: 0, fontSize: 14.5, lineHeight: 1.6, color: "var(--fg-secondary)" }}>
+              Dit verslag wordt gepubliceerd als officieel participatierapport voor Schapenweide.
+              Bewoners zien hierna het antwoord op hun zienswijze.
+            </p>
+            <div style={{
+              background: "var(--paper-50)",
+              borderRadius: "var(--radius-md)",
+              padding: "12px 16px",
+              boxShadow: "var(--shadow-hairline)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 12,
+              fontSize: 13,
+            }}>
+              <span style={{ color: "var(--fg-tertiary)" }}>Referentienummer</span>
+              <span style={{
+                fontFamily: "var(--font-mono)",
+                fontWeight: 600,
+                color: "var(--ink-900)",
+                fontVariantNumeric: "tabular-nums",
+                letterSpacing: "0.04em",
+              }}>
+                {pendingRef}
+              </span>
+            </div>
+            <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 4 }}>
+              <button
+                type="button"
+                onClick={cancelSign}
+                style={{
+                  padding: "10px 18px",
+                  borderRadius: "var(--radius-md)",
+                  background: "transparent",
+                  color: "var(--fg-secondary)",
+                  border: "none",
+                  fontFamily: "var(--font-sans)",
+                  fontSize: 14,
+                  fontWeight: 500,
+                  cursor: "pointer",
+                }}
+              >
+                Annuleer
+              </button>
+              <button
+                type="button"
+                onClick={confirmSign}
+                style={{
+                  padding: "10px 18px",
+                  borderRadius: "var(--radius-md)",
+                  background: "var(--moss-500)",
+                  color: "var(--paper-50)",
+                  border: "none",
+                  fontFamily: "var(--font-sans)",
+                  fontSize: 14,
+                  fontWeight: 500,
+                  cursor: "pointer",
+                  boxShadow: "var(--shadow-sm)",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 8,
+                }}
+              >
+                <CheckIcon />
+                Bevestig & publiceer
+              </button>
+            </div>
           </div>
         </div>
       )}
