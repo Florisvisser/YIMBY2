@@ -23,6 +23,7 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "Samenspraak — Schapenweide, Bilthoven",
   description: "Burgerparticipatie als bewijsbare feedback-loop.",
+  icons: { icon: "/logo/samenspraak-mark.svg" },
 };
 
 export default function RootLayout({

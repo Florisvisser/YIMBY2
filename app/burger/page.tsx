@@ -1,3 +1,4 @@
+import Link from "next/link";
 import BurgerForm from "./BurgerForm";
 
 function SamenspraakMark() {
@@ -21,7 +22,7 @@ export default function BurgerPage() {
         justifyContent: "space-between",
         borderBottom: "1px solid var(--border-soft)",
       }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <Link href="/" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
           <SamenspraakMark />
           <span style={{
             fontFamily: "var(--font-display)",
@@ -33,7 +34,7 @@ export default function BurgerPage() {
           }}>
             Samenspraak
           </span>
-        </div>
+        </Link>
         <span style={{
           fontFamily: "var(--font-mono)",
           fontSize: 11,
@@ -46,7 +47,7 @@ export default function BurgerPage() {
 
       {/* Content */}
       <main style={{ flex: 1, display: "flex", justifyContent: "center", paddingTop: 48, paddingBottom: 48, paddingLeft: 24, paddingRight: 24 }}>
-        <div style={{ width: "100%", maxWidth: 480 }}>
+        <div style={{ width: "100%" }}>
           <BurgerForm />
         </div>
       </main>
