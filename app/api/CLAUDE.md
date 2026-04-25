@@ -9,11 +9,17 @@ Lees eerst `/AGENTS.md` en `/lib/CLAUDE.md`. Hier staat alleen route-handler-spe
 | `/api/seeded-concerns` | `GET` | — | `Concern[]` (seeded 50) |
 | `/api/motivering` | `POST` | `{ projectId: "schapenweide", forceFallback?: boolean }` | `MotiveringReport` |
 | `/api/concerns` | `POST` | `{ postcode, neighbourhood, streetReference?, category, severity (1–5), concernText }` | `201` + `Concern` |
+| `/api/concerns/[id]` | `PATCH` | `{ status: "new" \| "in_review" \| "answered" }` | `200` + updated `Concern` |
+| `/api/concerns/mine` | `POST` | `{ ids: uuid[] }` (max 50) | `Concern[]` |
 | `/api/pdok` | `GET` | `?postcode=3722HD&huisnummer=12` | `{ postcode, neighbourhood, streetReference? }` |
 
-**`/api/concerns`** valideert via `ConcernSubmitSchema` (`lib/data/schema-concern.ts`), inserted via service-role key, roept `revalidatePath('/gemeente')` aan zodat refresh van het dashboard de nieuwe zienswijze toont. Server vult `projectId='schapenweide'`, `personaType='underrepresented_resident'`, `submittedAt=now()`. Bij DB/env-fail: `500` + `{ error }`.
+**`/api/concerns`** valideert via `ConcernSubmitSchema`, inserted via anon key (RLS), roept `revalidatePath('/gemeente')` aan. Server vult `projectId='schapenweide'`, `personaType='underrepresented_resident'`, `submittedAt=now()`. Bij DB/env-fail: `500` + `{ error }`.
 
-**`/api/pdok`** proxy naar `https://api.pdok.nl/bzk/locatieserver/search/v3_1/free`. Geen API-key nodig. Bij geen match: `404`. Bij PDOK down: `502`. Normaliseert postcode terug naar `"1234 AB"` formaat.
+**`/api/concerns/[id]` PATCH** (Phase 3) — status-mutatie door gemeente. Valideert UUID + `StatusPatchSchema`. Server is de gatekeeper: alleen status wordt doorgegeven aan `updateConcernStatus`, andere kolommen blijven onaangetast (RLS UPDATE policy is permissief omdat Postgres geen kolom-policies kent). `revalidatePath('/gemeente')` én `revalidatePath('/burger/mijn-zorgen')`.
+
+**`/api/concerns/mine` POST** (Phase 3) — fetch by id-list voor `/burger/mijn-zorgen`. Body `{ ids: uuid[] }`, max 50, `MineSchema`. POST i.p.v. GET om URL-lengtelimiet te vermijden bij vele submissions en schoner in proxy/CDN logs.
+
+**`/api/pdok`** proxy naar Locatieserver. Geen API-key nodig. Bij geen match: `404`. Bij PDOK down/timeout: `502`/`504`. `AbortSignal.timeout(5000)` op de fetch. Normaliseert postcode terug naar `"1234 AB"` formaat.
 
 ## Next.js 16 valkuil
 

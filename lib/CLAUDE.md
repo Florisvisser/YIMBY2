@@ -7,11 +7,11 @@ Lees eerst `/AGENTS.md` voor de project-regels. Hier staat alleen wat specifiek 
 ```
 lib/
   data/
-    types.ts              ConcernCategory, Concern, MotiveringReport types
-    concerns-json.ts      raw read uit data/seeded-concerns.json
-    concerns-supabase.ts  read+insert via Supabase REST + service-role key
+    types.ts              ConcernCategory, Concern (incl. source + status), ConcernStatus, MotiveringReport
+    concerns-json.ts      raw read uit data/seeded-concerns.json — wrapt elk item met source: 'seed'
+    concerns-supabase.ts  read+insert+update by REST + anon key (RLS); rowToConcern zet source: 'db'
     concerns.ts           adapter: getConcerns() (seed ⊕ DB), groupByCategory(), getCategoryStats()
-    schema-concern.ts     zod schema voor /api/concerns POST body
+    schema-concern.ts     zod schemas: ConcernSubmitSchema, StatusPatchSchema, MineSchema
   motivering/
     schema.ts             zod schema voor MotiveringReport
     fallback.ts           getFallbackReport() — leest + valideert data/motivering-fallback.json
@@ -49,8 +49,14 @@ const [seeded, supa] = await Promise.allSettled([
 
 - Beide bronnen worden *altijd* geprobeerd. `Promise.allSettled` (nooit `Promise.all`) zodat één faalt nooit de ander killt.
 - **Stille fallback** als Supabase env vars ontbreken: `readSupabaseConcerns()` retourneert `[]` met `console.warn`. Demo blijft werken op alleen seeded JSON.
-- Output gesorteerd op `submittedAt` desc — nieuwste eerst.
-- Snake_case → camelCase mapping gebeurt in `concerns-supabase.ts`. Het `Concern` type blijft onaangetast.
+- Output gesorteerd op `submittedAt` desc — nieuwste eerst (`Date.parse` delta, niet `localeCompare` — verschillende tz-suffixen).
+- Snake_case → camelCase mapping gebeurt in `concerns-supabase.ts`.
+- Elk item krijgt `source: 'seed' | 'db'` (Phase 3). Consumers filteren hierop voor "Recente burger-inzendingen" view.
+
+## Phase 3 helpers
+
+- `readSupabaseConcernsByIds(ids: string[])` — REST GET met `id=in.(uuid1,...)`. Voor `/burger/mijn-zorgen`. Lege lijst als env mist.
+- `updateConcernStatus(id, status)` — REST PATCH met `Prefer: return=representation`. Throws bij fail. Server-route is gatekeeper omdat RLS UPDATE permissief is (Postgres heeft geen kolom-policies).
 
 ## Severity-aggregatie
 

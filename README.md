@@ -7,10 +7,11 @@ Hackathon-demo voor het Schapenweide-project (Bilthoven). De app laat zien hoe b
 ## Demo loop
 
 ```
-Burger dient zorg in
-  → gemeente ziet geclusterd dashboard
+Burger dient zorg in (/burger)
+  → gemeente ziet geclusterd dashboard (/gemeente)
   → "Genereer verslag" produceert concept-motivering (Claude)
-  → burger ziet wat ermee gebeurt
+  → gemeente markeert in behandeling / beantwoord
+  → burger ziet status van eigen zorgen (/burger/mijn-zorgen)
 ```
 
 ## Lokaal draaien
@@ -33,11 +34,14 @@ Env vars (zie `.env.example`):
 | Route | Doel |
 |---|---|
 | `/` | Landing |
-| `/gemeente` | Dashboard voor de ambtenaar (Marieke) — Phase 1 |
+| `/gemeente` | Dashboard voor de ambtenaar (Marieke) — Phase 1 + status-mutatie Phase 3 |
 | `/burger` | Burger-flow (Achmed) — 3-stappen wizard, Phase 2 |
+| `/burger/mijn-zorgen` | Eigen inzendingen + status, gebaseerd op localStorage IDs, Phase 3 |
 | `/api/seeded-concerns` | `GET` alle 50 seeded concerns |
 | `/api/motivering` | `POST` één Claude-call → concept verslag |
 | `/api/concerns` | `POST` zienswijze → Supabase, Phase 2 |
+| `/api/concerns/[id]` | `PATCH` status (new \| in_review \| answered), Phase 3 |
+| `/api/concerns/mine` | `POST` `{ids}` → eigen zienswijzen, Phase 3 |
 | `/api/pdok` | `GET` proxy naar PDOK Locatieserver, Phase 2 |
 
 ## Scripts

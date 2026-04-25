@@ -6,8 +6,11 @@ Lees eerst `/AGENTS.md` voor project-regels. Hier staat alleen wat specifiek voo
 
 ```
 app/burger/
-  page.tsx        Server Component — statische intro + <BurgerForm />
-  BurgerForm.tsx  "use client" — 3-stappen wizard, alle state lokaal
+  page.tsx                       Server Component — statische intro + <BurgerForm />
+  BurgerForm.tsx                 "use client" — 3-stappen wizard, alle state lokaal
+  mijn-zorgen/
+    page.tsx                     Server shell — header/footer, env-check, props door
+    MijnZorgenList.tsx           "use client" — leest localStorage, fetch, render
 ```
 
 ## Server vs Client
@@ -33,6 +36,15 @@ Client-side guards (knop disabled bij ontbrekende velden), maar de server (`/api
 
 ## Demo-veiligheid
 
-- Dubbel-klik mag nooit twee submissions afvuren → `if (submitLoading) return;` voor elke async handler.
-- PDOK fail mag niet de hele flow killen — toon error inline op stap 1.
+- Dubbel-klik mag nooit twee submissions afvuren → `useRef`-flag synchroon vóór `fetch` (state-based `if (loading) return` is niet kogelvrij — twee clicks in dezelfde frame zien beide loading=false).
+- PDOK fail mag niet de hele flow killen — toon error inline + "Toch doorgaan zonder PDOK-verificatie"-knop, zodat seeded-postcodes (3722 HD, etc.) die niet in PDOK staan, alsnog verder kunnen.
 - Refresh van `/burger` reset wizard naar stap 1 (state is in-memory). Acceptabel voor demo.
+
+## Mijn-zorgen (Phase 3)
+
+Na succesvolle submit schrijft `BurgerForm.handleSubmit` het returned `id` in localStorage onder `samenspraak.submissions.v1` (array van UUIDs). De done-state link wijst naar `/burger/mijn-zorgen` — gemeente-portaal zien de burgers niet meer.
+
+- `mijn-zorgen/page.tsx` is een **Server shell** die `process.env.NEXT_PUBLIC_SUPABASE_URL` + `SUPABASE_ANON_KEY` checkt en een `supabaseConfigured` prop doorgeeft.
+- `mijn-zorgen/MijnZorgenList.tsx` is **Client**. Gebruikt `useSyncExternalStore` om localStorage te lezen (geen `set-state-in-effect` lint-issue, geen hydration mismatch). POST `/api/concerns/mine` met `{ ids }` → render lijst met categorie + tekst + status-badge + datum.
+- States: demo-modus banner (env mist), loading, empty (geen IDs of geen DB-rijen), error, lijst.
+- **Geen mutatie-knoppen** — burger is read-only consument. Status-mutatie is gemeente-only.

@@ -12,9 +12,11 @@ Dit project is een hackathon-demo. We bouwen met twee non-technical mensen via C
 
 **Phase 1 (af)**: `/`, `/gemeente`, `/api/seeded-concerns`, `/api/motivering`, `data/seeded-concerns.json` (50 items), `data/motivering-fallback.json`.
 
-**Phase 2 (huidig)**: `/burger` (3-stappen wizard), `/api/concerns` (POST + Supabase insert + revalidatePath), `/api/pdok` (Locatieserver proxy), Supabase `concerns` tabel, `lib/data/concerns-supabase.ts` adapter. `getConcerns()` retourneert seed ⊕ DB.
+**Phase 2 (af)**: `/burger` (3-stappen wizard), `/api/concerns` (POST + Supabase insert + revalidatePath), `/api/pdok` (Locatieserver proxy), Supabase `concerns` tabel, `lib/data/concerns-supabase.ts` adapter. `getConcerns()` retourneert seed ⊕ DB.
 
-**Niet bouwen** (ook in Phase 2 niet): auth, multi-language, speech, kaarten, **live realtime dashboard updates** (refresh van `/gemeente` is voldoende — Supabase Realtime is *niet* aangezet), developer-perspectief.
+**Phase 3 (huidig)**: gescheiden burger- en gemeente-interfaces met status-loop. `Concern.source: 'seed' \| 'db'` discriminator, `Concern.status?: 'new' \| 'in_review' \| 'answered'`. Routes `PATCH /api/concerns/[id]` (status mutatie) + `POST /api/concerns/mine` (fetch by id-list). Burger-view `/burger/mijn-zorgen` met localStorage-IDs (`samenspraak.submissions.v1`). Gemeente-dashboard krijgt sectie "Recente burger-inzendingen" met filter-chips + status-knoppen + optimistic UI.
+
+**Niet bouwen** (ook in Phase 3 niet): auth, magic links, e-mail, multi-language, speech, kaarten, realtime updates, developer-perspectief, vrije tekst-antwoorden van gemeente, Claude-gegenereerde reacties, cross-device burger-view, productie-veilige kolom-RLS.
 
 ## Architectuur-regels (hard)
 
@@ -64,8 +66,8 @@ Supabase-toegang draait op de **anon key** + RLS policies: anon mag INSERT en SE
 
 Naast deze AGENTS.md staan er per werkgebied submap-`CLAUDE.md` files met specifieke regels. Claude Code laadt ze automatisch zodra je in die submap werkt:
 
-- `lib/CLAUDE.md` — Persoon A: data-adapter (seed + Supabase) + Claude SDK patroon
-- `app/api/CLAUDE.md` — Persoon A: route handler conventies (Next 16) — `/api/motivering`, `/api/concerns`, `/api/pdok`
-- `app/gemeente/CLAUDE.md` — Persoon B: Server/Client split + dashboard regels
-- `app/burger/CLAUDE.md` — Persoon B: 3-stappen wizard, persona-default
+- `lib/CLAUDE.md` — Persoon A: data-adapter (seed + Supabase) + Claude SDK patroon + status helpers
+- `app/api/CLAUDE.md` — Persoon A: route handler conventies (Next 16) — `/api/motivering`, `/api/concerns`, `/api/concerns/[id]`, `/api/concerns/mine`, `/api/pdok`
+- `app/gemeente/CLAUDE.md` — Persoon B: Server/Client split + dashboard regels + RecenteInzendingen
+- `app/burger/CLAUDE.md` — Persoon B: 3-stappen wizard, persona-default, /mijn-zorgen view, localStorage
 - `data/CLAUDE.md` — Persoon B: shape, aantallen, schrijfregels voor seeded data en fallback
