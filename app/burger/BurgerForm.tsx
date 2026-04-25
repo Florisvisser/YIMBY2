@@ -45,6 +45,22 @@ const SEVERITY_LABELS: Record<number, string> = {
   5: "onaanvaardbaar",
 };
 
+const CONCERN_CATEGORY_ICON: Record<ConcernCategory, string> = {
+  traffic_parking: "🚗",
+  building_height: "🏢",
+  green_nature: "🌳",
+  noise_livability: "🔊",
+};
+
+const CONCERN_IMPACT_STYLE: Record<
+  "laag" | "gemiddeld" | "hoog",
+  { bg: string; fg: string; label: string }
+> = {
+  laag: { bg: "var(--moss-50)", fg: "var(--moss-700)", label: "Laag" },
+  gemiddeld: { bg: "var(--amber-50)", fg: "var(--amber-500)", label: "Gemiddeld" },
+  hoog: { bg: "var(--rose-50)", fg: "var(--rose-500)", label: "Hoog" },
+};
+
 const NEAR_POSTCODES = new Set(["3721", "3722", "3723"]);
 function isNear(postcode: string): boolean {
   return NEAR_POSTCODES.has(postcode.replace(/\s/g, "").slice(0, 4));
@@ -401,9 +417,9 @@ export default function BurgerForm() {
             <Eyebrow>Stap 4 van 5</Eyebrow>
             <h1 style={{
               fontFamily: "var(--font-display)",
-              fontSize: "clamp(28px, 6vw, 36px)",
+              fontSize: "clamp(24px, 5vw, 32px)",
               fontWeight: 500,
-              lineHeight: 1.1,
+              lineHeight: 1.15,
               letterSpacing: "-0.02em",
               color: "var(--ink-900)",
               margin: "0 0 12px 0",
@@ -411,168 +427,234 @@ export default function BurgerForm() {
             }}>
               Vertel jouw zorg
             </h1>
-            <p style={{ fontSize: 16, lineHeight: 1.6, color: "var(--fg-secondary)", margin: "0 0 28px 0" }}>
+            <p style={{ fontSize: 15, lineHeight: 1.6, color: "var(--fg-secondary)", margin: "0 0 24px 0" }}>
               Kies een thema en beschrijf wat je bezighoudt. Jouw inbreng komt geanonimiseerd bij de gemeente.
             </p>
 
-            {/* Address recap */}
-            {address && (
-              <div style={{
-                background: "var(--paper-0)",
-                borderRadius: "var(--radius-lg)",
-                padding: 16,
-                boxShadow: "var(--shadow-sm), var(--shadow-hairline)",
-                marginBottom: 20,
-              }}>
-                <div style={{ fontSize: 10, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.12em", color: "var(--fg-tertiary)", marginBottom: 6 }}>
-                  Adres
-                </div>
-                {address.streetReference && (
-                  <p style={{ margin: "0 0 2px 0", fontSize: 14, fontWeight: 500, color: "var(--ink-900)" }}>
-                    {address.streetReference}
-                  </p>
+            {/* Two-column layout */}
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: 24,
+              alignItems: "start",
+            }}>
+              {/* Left: context summary */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {/* Address card */}
+                {address && (
+                  <div style={{
+                    background: "var(--paper-0)",
+                    borderRadius: "var(--radius-lg)",
+                    padding: 16,
+                    boxShadow: "var(--shadow-sm), var(--shadow-hairline)",
+                  }}>
+                    <div style={{ fontSize: 10, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.12em", color: "var(--fg-tertiary)", marginBottom: 6 }}>
+                      Jouw adres
+                    </div>
+                    {address.streetReference && (
+                      <p style={{ margin: "0 0 2px 0", fontSize: 14, fontWeight: 500, color: "var(--ink-900)" }}>
+                        {address.streetReference}
+                      </p>
+                    )}
+                    <p style={{ margin: 0, fontSize: 13, color: "var(--fg-secondary)" }}>
+                      {address.postcode} · {address.neighbourhood}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setStep("profile")}
+                      style={{ marginTop: 8, fontSize: 12, color: "var(--fg-tertiary)", background: "transparent", border: "none", cursor: "pointer", textDecoration: "underline", fontFamily: "var(--font-sans)", padding: 0 }}
+                    >
+                      Adres wijzigen
+                    </button>
+                  </div>
                 )}
-                <p style={{ margin: 0, fontSize: 13, color: "var(--fg-secondary)" }}>
-                  {address.postcode} · {address.neighbourhood}
-                </p>
+
+                {/* Plan summary */}
+                {planUitleg && (
+                  <>
+                    <div style={{ fontSize: 10, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.12em", color: "var(--fg-tertiary)", marginTop: 4 }}>
+                      Plan samengevat
+                    </div>
+                    <p style={{ fontSize: 13, lineHeight: 1.55, color: "var(--fg-secondary)", margin: 0 }}>
+                      {planUitleg.intro}
+                    </p>
+                    {planUitleg.sections.map((section) => {
+                      const impact = CONCERN_IMPACT_STYLE[section.impactLevel];
+                      return (
+                        <div
+                          key={section.category}
+                          style={{
+                            background: "var(--paper-0)",
+                            borderRadius: "var(--radius-lg)",
+                            padding: "12px 14px",
+                            boxShadow: "var(--shadow-sm), var(--shadow-hairline)",
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 4,
+                          }}
+                        >
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                              <span style={{ fontSize: 14, lineHeight: 1 }}>{CONCERN_CATEGORY_ICON[section.category]}</span>
+                              <span style={{ fontSize: 11, fontWeight: 600, color: "var(--fg-secondary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                                {CATEGORY_LABEL_NL[section.category]}
+                              </span>
+                            </div>
+                            <span style={{
+                              fontSize: 10,
+                              fontWeight: 500,
+                              padding: "2px 7px",
+                              borderRadius: "var(--radius-full)",
+                              background: impact.bg,
+                              color: impact.fg,
+                              whiteSpace: "nowrap",
+                              flexShrink: 0,
+                            }}>
+                              {impact.label}
+                            </span>
+                          </div>
+                          <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: "var(--ink-900)", lineHeight: 1.3 }}>
+                            {section.headline}
+                          </p>
+                        </div>
+                      );
+                    })}
+                  </>
+                )}
+              </div>
+
+              {/* Right: form */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+                {/* Category */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 20 }}>
+                  <span style={{ fontSize: 13, fontWeight: 500, color: "var(--fg-secondary)" }}>Welk thema raakt jou het meest?</span>
+                  {CATEGORY_OPTIONS.map((opt) => {
+                    const sel = category === opt;
+                    return (
+                      <button
+                        key={opt}
+                        type="button"
+                        onClick={() => setCategory(opt)}
+                        style={{
+                          textAlign: "left",
+                          padding: "14px 16px",
+                          borderRadius: "var(--radius-lg)",
+                          background: sel ? "var(--moss-50)" : "var(--paper-0)",
+                          border: sel ? "1.5px solid var(--moss-400)" : "1px solid var(--border-soft)",
+                          boxShadow: sel ? `0 0 0 3px color-mix(in oklab, var(--moss-300) 30%, transparent)` : "var(--shadow-xs)",
+                          cursor: "pointer",
+                          transition: `all var(--dur-fast) var(--ease-out)`,
+                        }}
+                      >
+                        <span style={{ fontSize: 14, fontWeight: 600, color: "var(--ink-900)" }}>{CATEGORY_LABEL_NL[opt]}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Severity */}
+                <div style={{ background: "var(--paper-0)", borderRadius: "var(--radius-lg)", padding: 16, boxShadow: "var(--shadow-sm), var(--shadow-hairline)", marginBottom: 12 }}>
+                  <label htmlFor="severity" style={{ display: "block", fontSize: 13, fontWeight: 500, color: "var(--fg-secondary)", marginBottom: 4 }}>
+                    Hoe groot is het probleem voor jou?
+                  </label>
+                  <p style={{ margin: "0 0 10px 0", fontSize: 13, color: "var(--fg-muted)" }}>
+                    {severity} / 5 — <span style={{ color: "var(--fg-secondary)" }}>{SEVERITY_LABELS[severity]}</span>
+                  </p>
+                  <input
+                    id="severity"
+                    type="range"
+                    min={1}
+                    max={5}
+                    step={1}
+                    value={severity}
+                    onChange={(e) => setSeverity(Number(e.target.value))}
+                    style={{ width: "100%", accentColor: "var(--moss-500)" }}
+                  />
+                </div>
+
+                {/* Concern text */}
+                <div style={{ background: "var(--paper-0)", borderRadius: "var(--radius-lg)", padding: 16, boxShadow: "var(--shadow-sm), var(--shadow-hairline)", marginBottom: 12, display: "flex", flexDirection: "column", gap: 10 }}>
+                  <label htmlFor="concernText" style={{ fontSize: 13, fontWeight: 500, color: "var(--fg-secondary)" }}>
+                    Beschrijf je zorg
+                  </label>
+                  <textarea
+                    id="concernText"
+                    value={concernText}
+                    onChange={(e) => setConcernText(e.target.value.slice(0, MAX_TEXT))}
+                    rows={5}
+                    placeholder="Tijdens de spits is de Emmalaan al overbelast…"
+                    style={{
+                      width: "100%",
+                      padding: 12,
+                      borderRadius: "var(--radius-md)",
+                      border: "1px solid var(--border-medium)",
+                      background: "var(--paper-50)",
+                      fontFamily: "var(--font-sans)",
+                      fontSize: 14,
+                      lineHeight: 1.55,
+                      color: "var(--ink-900)",
+                      outline: "none",
+                      resize: "vertical",
+                      boxSizing: "border-box",
+                    }}
+                  />
+                  <p style={{ fontSize: 12, color: "var(--fg-muted)", margin: 0 }}>
+                    {concernText.length}/{MAX_TEXT} tekens
+                    {concernText.length < MIN_TEXT && (
+                      <span style={{ color: "var(--rose-300)" }}> · minimaal {MIN_TEXT} tekens</span>
+                    )}
+                  </p>
+                </div>
+
+                {/* Voice */}
                 <button
                   type="button"
-                  onClick={() => setStep("profile")}
-                  style={{ marginTop: 8, fontSize: 12, color: "var(--fg-tertiary)", background: "transparent", border: "none", cursor: "pointer", textDecoration: "underline", fontFamily: "var(--font-sans)", padding: 0 }}
+                  onClick={() => setRecording(!recording)}
+                  style={{
+                    width: "100%",
+                    padding: "12px 16px",
+                    borderRadius: "var(--radius-md)",
+                    background: recording ? "var(--clay-50)" : "var(--paper-0)",
+                    border: recording ? "1.5px solid var(--clay-300)" : "1px solid var(--border-soft)",
+                    color: recording ? "var(--clay-500)" : "var(--fg-secondary)",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 10,
+                    fontSize: 14,
+                    fontWeight: 500,
+                    fontFamily: "var(--font-sans)",
+                    marginBottom: 20,
+                    transition: `all var(--dur-fast) var(--ease-out)`,
+                  }}
                 >
-                  Adres wijzigen
+                  <MicIcon active={recording} />
+                  {recording ? "Aan het opnemen… (Reson8)" : "Inspreken in plaats van typen"}
+                </button>
+
+                {submitError && (
+                  <div style={{ background: "var(--rose-50)", borderRadius: "var(--radius-sm)", padding: "10px 14px", fontSize: 13, color: "var(--rose-500)", marginBottom: 12 }}>
+                    {submitError}
+                  </div>
+                )}
+
+                <PrimaryBtn
+                  onClick={handleSubmit}
+                  disabled={submitLoading || !category || concernText.length < MIN_TEXT}
+                >
+                  {submitLoading ? "Versturen…" : "Verstuur mijn zorg"}
+                </PrimaryBtn>
+
+                <button
+                  type="button"
+                  onClick={() => setStep("plan_uitleg")}
+                  style={{ background: "transparent", border: "none", cursor: "pointer", fontFamily: "var(--font-sans)", fontSize: 13, color: "var(--fg-tertiary)", textDecoration: "underline", padding: "12px 0 0 0" }}
+                >
+                  ← Terug naar plan-uitleg
                 </button>
               </div>
-            )}
-
-            {/* Category */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 20 }}>
-              <span style={{ fontSize: 13, fontWeight: 500, color: "var(--fg-secondary)" }}>Welk thema raakt jou het meest?</span>
-              {CATEGORY_OPTIONS.map((opt) => {
-                const sel = category === opt;
-                return (
-                  <button
-                    key={opt}
-                    type="button"
-                    onClick={() => setCategory(opt)}
-                    style={{
-                      textAlign: "left",
-                      padding: "16px 18px",
-                      borderRadius: "var(--radius-lg)",
-                      background: sel ? "var(--moss-50)" : "var(--paper-0)",
-                      border: sel ? "1.5px solid var(--moss-400)" : "1px solid var(--border-soft)",
-                      boxShadow: sel ? `0 0 0 3px color-mix(in oklab, var(--moss-300) 30%, transparent)` : "var(--shadow-xs)",
-                      cursor: "pointer",
-                      transition: `all var(--dur-fast) var(--ease-out)`,
-                    }}
-                  >
-                    <span style={{ fontSize: 15, fontWeight: 600, color: "var(--ink-900)" }}>{CATEGORY_LABEL_NL[opt]}</span>
-                  </button>
-                );
-              })}
             </div>
-
-            {/* Severity */}
-            <div style={{ background: "var(--paper-0)", borderRadius: "var(--radius-lg)", padding: 20, boxShadow: "var(--shadow-sm), var(--shadow-hairline)", marginBottom: 16 }}>
-              <label htmlFor="severity" style={{ display: "block", fontSize: 13, fontWeight: 500, color: "var(--fg-secondary)", marginBottom: 4 }}>
-                Hoe groot is het probleem voor jou?
-              </label>
-              <p style={{ margin: "0 0 12px 0", fontSize: 13, color: "var(--fg-muted)" }}>
-                {severity} / 5 — <span style={{ color: "var(--fg-secondary)" }}>{SEVERITY_LABELS[severity]}</span>
-              </p>
-              <input
-                id="severity"
-                type="range"
-                min={1}
-                max={5}
-                step={1}
-                value={severity}
-                onChange={(e) => setSeverity(Number(e.target.value))}
-                style={{ width: "100%", accentColor: "var(--moss-500)" }}
-              />
-            </div>
-
-            {/* Concern text */}
-            <div style={{ background: "var(--paper-0)", borderRadius: "var(--radius-lg)", padding: 20, boxShadow: "var(--shadow-sm), var(--shadow-hairline)", marginBottom: 16, display: "flex", flexDirection: "column", gap: 10 }}>
-              <label htmlFor="concernText" style={{ fontSize: 13, fontWeight: 500, color: "var(--fg-secondary)" }}>
-                Beschrijf je zorg
-              </label>
-              <textarea
-                id="concernText"
-                value={concernText}
-                onChange={(e) => setConcernText(e.target.value.slice(0, MAX_TEXT))}
-                rows={5}
-                placeholder="Tijdens de spits is de Emmalaan al overbelast…"
-                style={{
-                  width: "100%",
-                  padding: 14,
-                  borderRadius: "var(--radius-md)",
-                  border: "1px solid var(--border-medium)",
-                  background: "var(--paper-50)",
-                  fontFamily: "var(--font-sans)",
-                  fontSize: 15,
-                  lineHeight: 1.55,
-                  color: "var(--ink-900)",
-                  outline: "none",
-                  resize: "vertical",
-                  boxSizing: "border-box",
-                }}
-              />
-              <p style={{ fontSize: 12, color: "var(--fg-muted)", margin: 0 }}>
-                {concernText.length}/{MAX_TEXT} tekens
-                {concernText.length < MIN_TEXT && (
-                  <span style={{ color: "var(--rose-300)" }}> · minimaal {MIN_TEXT} tekens</span>
-                )}
-              </p>
-            </div>
-
-            {/* Voice */}
-            <button
-              type="button"
-              onClick={() => setRecording(!recording)}
-              style={{
-                width: "100%",
-                padding: "14px 18px",
-                borderRadius: "var(--radius-md)",
-                background: recording ? "var(--clay-50)" : "var(--paper-0)",
-                border: recording ? "1.5px solid var(--clay-300)" : "1px solid var(--border-soft)",
-                color: recording ? "var(--clay-500)" : "var(--fg-secondary)",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 10,
-                fontSize: 14,
-                fontWeight: 500,
-                fontFamily: "var(--font-sans)",
-                marginBottom: 28,
-                transition: `all var(--dur-fast) var(--ease-out)`,
-              }}
-            >
-              <MicIcon active={recording} />
-              {recording ? "Aan het opnemen… (Reson8)" : "Inspreken in plaats van typen"}
-            </button>
-
-            {submitError && (
-              <div style={{ background: "var(--rose-50)", borderRadius: "var(--radius-sm)", padding: "10px 14px", fontSize: 13, color: "var(--rose-500)", marginBottom: 16 }}>
-                {submitError}
-              </div>
-            )}
-
-            <PrimaryBtn
-              onClick={handleSubmit}
-              disabled={submitLoading || !category || concernText.length < MIN_TEXT}
-            >
-              {submitLoading ? "Versturen…" : "Verstuur mijn zorg"}
-            </PrimaryBtn>
-
-            <button
-              type="button"
-              onClick={() => setStep("plan_uitleg")}
-              style={{ background: "transparent", border: "none", cursor: "pointer", fontFamily: "var(--font-sans)", fontSize: 13, color: "var(--fg-tertiary)", textDecoration: "underline", padding: "12px 0 0 0" }}
-            >
-              ← Terug naar plan-uitleg
-            </button>
           </div>
         );
       })()}
