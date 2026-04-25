@@ -8,6 +8,8 @@ import {
   type Concern,
   type ConcernCategory,
   type PersonaType,
+  type ThemaAntwoord,
+  type ThemaAntwoordenMap,
 } from "@/lib/data/types";
 import type { ThemaAnalyse } from "@/lib/thema-analyse/schema";
 import { severityTone } from "./severity-utils";
@@ -40,9 +42,16 @@ function CloseIcon() {
 type ThemaCardsProps = {
   stats: CategoryStats[];
   concerns: Concern[];
+  antwoorden: ThemaAntwoordenMap;
+  onUpdate: (category: ConcernCategory, partial: Partial<ThemaAntwoord>) => void;
 };
 
-export default function ThemaCards({ stats, concerns }: ThemaCardsProps) {
+export default function ThemaCards({
+  stats,
+  concerns,
+  antwoorden,
+  onUpdate,
+}: ThemaCardsProps) {
   const [selectedCategory, setSelectedCategory] =
     useState<ConcernCategory | null>(null);
   const [hoveredCategory, setHoveredCategory] =
@@ -64,6 +73,10 @@ export default function ThemaCards({ stats, concerns }: ThemaCardsProps) {
       >
         {stats.map((stat) => {
           const isHovered = hoveredCategory === stat.category;
+          const themaAntwoord = antwoorden[stat.category];
+          const heeftAntwoord = (themaAntwoord?.antwoord ?? "").trim().length > 0;
+          const heeftPlanwijziging =
+            (themaAntwoord?.planwijziging ?? "").trim().length > 0;
           return (
             <div
               key={stat.category}
@@ -158,6 +171,47 @@ export default function ThemaCards({ stats, concerns }: ThemaCardsProps) {
                   Klik voor details →
                 </span>
               </div>
+              {(heeftAntwoord || heeftPlanwijziging) && (
+                <div
+                  style={{
+                    display: "flex",
+                    gap: 6,
+                    marginTop: 4,
+                    flexWrap: "wrap",
+                  }}
+                >
+                  {heeftAntwoord && (
+                    <span
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 500,
+                        padding: "2px 8px",
+                        borderRadius: "var(--radius-full)",
+                        background: "var(--moss-50)",
+                        color: "var(--moss-700)",
+                        boxShadow: "var(--shadow-hairline)",
+                      }}
+                    >
+                      ✓ Antwoord
+                    </span>
+                  )}
+                  {heeftPlanwijziging && (
+                    <span
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 500,
+                        padding: "2px 8px",
+                        borderRadius: "var(--radius-full)",
+                        background: "var(--sky-50, #EAF5FA)",
+                        color: "var(--sky-500, #2A6F8E)",
+                        boxShadow: "var(--shadow-hairline)",
+                      }}
+                    >
+                      ✓ Planwijziging
+                    </span>
+                  )}
+                </div>
+              )}
               {stat.representative && (
                 <blockquote
                   style={{
@@ -189,6 +243,8 @@ export default function ThemaCards({ stats, concerns }: ThemaCardsProps) {
         <ThemaModal
           stat={selectedStat}
           concerns={selectedConcerns}
+          antwoord={antwoorden[selectedCategory]}
+          onUpdate={(partial) => onUpdate(selectedCategory, partial)}
           onClose={() => setSelectedCategory(null)}
         />
       )}
@@ -199,10 +255,14 @@ export default function ThemaCards({ stats, concerns }: ThemaCardsProps) {
 function ThemaModal({
   stat,
   concerns,
+  antwoord,
+  onUpdate,
   onClose,
 }: {
   stat: CategoryStats;
   concerns: Concern[];
+  antwoord?: ThemaAntwoord;
+  onUpdate: (partial: Partial<ThemaAntwoord>) => void;
   onClose: () => void;
 }) {
   useEffect(() => {
@@ -549,6 +609,76 @@ function ThemaModal({
                   )}
                 </div>
               )}
+            </section>
+
+            {/* Antwoord + planwijziging */}
+            <section
+              style={{
+                background: "var(--paper-0)",
+                borderRadius: "var(--radius-lg)",
+                padding: 18,
+                boxShadow: "var(--shadow-hairline)",
+                border: "1px solid var(--border-soft)",
+                display: "flex",
+                flexDirection: "column",
+                gap: 14,
+              }}
+            >
+              <SectionLabel>Antwoord aan bewoners</SectionLabel>
+              <p style={{ margin: 0, fontSize: 12, color: "var(--fg-tertiary)", lineHeight: 1.5 }}>
+                Wordt bij publicatie zichtbaar voor elke bewoner met een zorg in dit thema.
+              </p>
+              <textarea
+                value={antwoord?.antwoord ?? ""}
+                onChange={(e) => onUpdate({ antwoord: e.target.value })}
+                placeholder="Bijv. 'We nemen de verkeersveiligheid op de Emmalaan serieus en doen een mobiliteitstoets vóór vaststelling van het plan…'"
+                rows={4}
+                style={{
+                  width: "100%",
+                  padding: "12px 14px",
+                  fontSize: 14,
+                  fontFamily: "var(--font-sans)",
+                  lineHeight: 1.55,
+                  borderRadius: "var(--radius-md)",
+                  border: "1px solid var(--border-medium)",
+                  background: "var(--paper-50)",
+                  color: "var(--ink-900)",
+                  outline: "none",
+                  boxSizing: "border-box",
+                  resize: "vertical",
+                }}
+              />
+
+              <div style={{ marginTop: 4 }}>
+                <SectionLabel>Voorgestelde planwijziging</SectionLabel>
+                <p style={{ margin: "0 0 10px 0", fontSize: 12, color: "var(--fg-tertiary)", lineHeight: 1.5 }}>
+                  Concrete aanpassing aan het plan op basis van deze zienswijzen.
+                </p>
+                <textarea
+                  value={antwoord?.planwijziging ?? ""}
+                  onChange={(e) => onUpdate({ planwijziging: e.target.value })}
+                  placeholder="Bijv. 'De Nachtegaalstraat wordt uitgesloten als bouwroute; vrachtverkeer rijdt via de Soestdijkseweg…'"
+                  rows={3}
+                  style={{
+                    width: "100%",
+                    padding: "12px 14px",
+                    fontSize: 14,
+                    fontFamily: "var(--font-sans)",
+                    lineHeight: 1.55,
+                    borderRadius: "var(--radius-md)",
+                    border: "1px solid var(--border-medium)",
+                    background: "var(--paper-50)",
+                    color: "var(--ink-900)",
+                    outline: "none",
+                    boxSizing: "border-box",
+                    resize: "vertical",
+                  }}
+                />
+              </div>
+
+              <p style={{ margin: 0, fontSize: 11, color: "var(--fg-muted)", fontStyle: "italic" }}>
+                Wijzigingen worden automatisch lokaal bewaard.
+              </p>
             </section>
 
             {/* Severity distribution */}

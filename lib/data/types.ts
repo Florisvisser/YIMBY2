@@ -36,6 +36,13 @@ export const STATUS_LABEL_NL: Record<ConcernStatus, string> = {
   answered: "Beantwoord",
 };
 
+export type ThemaAntwoord = {
+  antwoord: string;
+  planwijziging: string;
+};
+
+export type ThemaAntwoordenMap = Partial<Record<ConcernCategory, ThemaAntwoord>>;
+
 export const CATEGORY_LABEL_NL: Record<ConcernCategory, string> = {
   traffic_parking: "Verkeer & parkeren",
   building_height: "Bouwhoogte & uitzicht",

@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import type { CategoryStats, Concern, ThemaAntwoordenMap } from "@/lib/data/types";
 
 interface ReportSection {
   category: string;
@@ -55,7 +56,15 @@ type PublishState =
   | { status: "published"; reference: string; signedAt: string }
   | { status: "error"; error: string };
 
-export default function MotiveringPanel() {
+export default function MotiveringPanel({
+  concerns: _concerns,
+  stats: _stats,
+  antwoorden: _antwoorden,
+}: {
+  concerns: Concern[];
+  stats: CategoryStats[];
+  antwoorden: ThemaAntwoordenMap;
+}) {
   const [loading, setLoading] = useState(false);
   const [report, setReport] = useState<MotiveringReport | null>(null);
   const [error, setError] = useState<string | null>(null);

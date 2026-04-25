@@ -1,7 +1,5 @@
 import { getConcerns, getCategoryStats } from "@/lib/data/concerns";
-import MotiveringPanel from "./MotiveringPanel";
-import RecenteInzendingen from "./RecenteInzendingen";
-import ThemaCards from "./ThemaCards";
+import GemeenteWorkspace from "./GemeenteWorkspace";
 
 export const revalidate = 0;
 
@@ -104,50 +102,7 @@ export default async function GemeentePage() {
           </p>
         </div>
 
-        {/* Stat cards */}
-        <section style={{ marginBottom: 48 }}>
-          <h2 style={{
-            fontSize: 11,
-            fontWeight: 500,
-            textTransform: "uppercase",
-            letterSpacing: "0.18em",
-            color: "var(--fg-tertiary)",
-            margin: "0 0 16px 0",
-          }}>
-            Overzicht per thema
-          </h2>
-          <ThemaCards stats={stats} concerns={concerns} />
-        </section>
-
-        {/* Recente burger-inzendingen */}
-        <section style={{ marginBottom: 48 }}>
-          <h2 style={{
-            fontSize: 11,
-            fontWeight: 500,
-            textTransform: "uppercase",
-            letterSpacing: "0.18em",
-            color: "var(--fg-tertiary)",
-            margin: "0 0 16px 0",
-          }}>
-            Recente burger-inzendingen
-          </h2>
-          <RecenteInzendingen concerns={concerns.filter((c) => c.source === "db")} />
-        </section>
-
-        {/* Report panel */}
-        <section>
-          <h2 style={{
-            fontSize: 11,
-            fontWeight: 500,
-            textTransform: "uppercase",
-            letterSpacing: "0.18em",
-            color: "var(--fg-tertiary)",
-            margin: "0 0 16px 0",
-          }}>
-            Concept-verslag
-          </h2>
-          <MotiveringPanel />
-        </section>
+        <GemeenteWorkspace concerns={concerns} stats={stats} />
       </main>
     </div>
   );
