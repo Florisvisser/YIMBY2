@@ -28,6 +28,12 @@ function snippet(text: string, max = 140): string {
   return text.slice(0, max).trimEnd() + "…";
 }
 
+function severityTone(severity: number): { fg: string; bg: string; label: string } {
+  if (severity >= 4) return { fg: "var(--rose-500)", bg: "var(--rose-50)", label: "Hoog" };
+  if (severity === 3) return { fg: "var(--amber-500)", bg: "var(--amber-50)", label: "Midden" };
+  return { fg: "var(--moss-700)", bg: "var(--moss-50)", label: "Laag" };
+}
+
 function formatDateTime(iso: string): string {
   return new Date(iso).toLocaleString("nl-NL", {
     day: "numeric",
@@ -198,7 +204,37 @@ export default function RecenteInzendingen({
                       {CATEGORY_LABEL_NL[c.category]}
                     </span>
                     <span>·</span>
-                    <span>ernst {c.severity}/5</span>
+                    {(() => {
+                      const tone = severityTone(c.severity);
+                      return (
+                        <span
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 6,
+                            padding: "2px 8px",
+                            borderRadius: "var(--radius-full)",
+                            background: tone.bg,
+                            color: tone.fg,
+                            fontWeight: 500,
+                            textTransform: "none",
+                            letterSpacing: 0,
+                          }}
+                          title={`${tone.label} prioriteit`}
+                        >
+                          <span
+                            style={{
+                              width: 6,
+                              height: 6,
+                              borderRadius: "50%",
+                              background: tone.fg,
+                              display: "inline-block",
+                            }}
+                          />
+                          ernst {c.severity}/5
+                        </span>
+                      );
+                    })()}
                     <span>·</span>
                     <span>{formatDateTime(c.submittedAt)}</span>
                   </div>
