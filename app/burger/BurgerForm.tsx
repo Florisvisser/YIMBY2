@@ -255,8 +255,17 @@ export default function BurgerForm() {
     let stream: MediaStream;
     try {
       stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    } catch {
-      setVoiceError("Microfoon niet toegankelijk. Controleer je browserinstellingen.");
+    } catch (err) {
+      const name = (err as DOMException | null)?.name ?? "";
+      if (name === "NotAllowedError" || name === "SecurityError") {
+        setVoiceError(
+          "Microfoon-toegang geweigerd. Klik op het slot-icoon naast de URL en sta microfoon toe.",
+        );
+      } else if (name === "NotFoundError" || name === "OverconstrainedError") {
+        setVoiceError("Geen microfoon gevonden. Sluit een microfoon aan en probeer opnieuw.");
+      } else {
+        setVoiceError("Microfoon niet toegankelijk. Controleer je browserinstellingen.");
+      }
       return;
     }
 
