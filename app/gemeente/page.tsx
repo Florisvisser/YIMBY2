@@ -1,6 +1,7 @@
 import { getConcerns, getCategoryStats } from "@/lib/data/concerns";
 import MotiveringPanel from "./MotiveringPanel";
 import RecenteInzendingen from "./RecenteInzendingen";
+import ThemaCards from "./ThemaCards";
 
 export const revalidate = 0;
 
@@ -14,71 +15,6 @@ function SamenspraakMark() {
   );
 }
 
-function StatCard({
-  cat,
-  count,
-  sev,
-  quote,
-}: {
-  cat: string;
-  count: number;
-  sev: number;
-  quote: string;
-}) {
-  return (
-    <div style={{
-      background: "var(--paper-0)",
-      borderRadius: "var(--radius-lg)",
-      padding: 22,
-      boxShadow: "var(--shadow-sm), var(--shadow-hairline)",
-      display: "flex",
-      flexDirection: "column",
-      gap: 12,
-    }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
-        <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600, color: "var(--ink-900)", letterSpacing: "-0.01em", lineHeight: 1.3 }}>
-          {cat}
-        </h3>
-        <span style={{
-          fontSize: 11,
-          fontWeight: 500,
-          padding: "4px 10px",
-          borderRadius: "var(--radius-full)",
-          background: "var(--moss-50)",
-          color: "var(--moss-700)",
-          boxShadow: "var(--shadow-hairline)",
-          fontVariantNumeric: "tabular-nums",
-          whiteSpace: "nowrap",
-          flexShrink: 0,
-        }}>
-          {count} zienswijzen
-        </span>
-      </div>
-      <div style={{ display: "flex", gap: 18, fontSize: 13, color: "var(--fg-tertiary)" }}>
-        <span>Ernst{" "}
-          <b style={{ fontFamily: "var(--font-mono)", color: "var(--ink-700)", fontWeight: 500, fontVariantNumeric: "tabular-nums" }}>
-            {sev.toFixed(1)} / 5
-          </b>
-        </span>
-      </div>
-      {quote && (
-        <blockquote style={{
-          margin: 0,
-          paddingLeft: 12,
-          borderLeft: "2px solid var(--moss-300)",
-          fontFamily: "var(--font-display)",
-          fontStyle: "italic",
-          fontSize: 14,
-          lineHeight: 1.55,
-          color: "var(--ink-700)",
-          fontVariationSettings: "'opsz' 14, 'SOFT' 80",
-        }}>
-          &ldquo;{quote}&rdquo;
-        </blockquote>
-      )}
-    </div>
-  );
-}
 
 export default async function GemeentePage() {
   const concerns = await getConcerns();
@@ -180,17 +116,7 @@ export default async function GemeentePage() {
           }}>
             Overzicht per thema
           </h2>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16 }}>
-            {stats.map((stat) => (
-              <StatCard
-                key={stat.category}
-                cat={stat.label}
-                count={stat.count}
-                sev={stat.severityAverage}
-                quote={stat.representative?.concernText ?? ""}
-              />
-            ))}
-          </div>
+          <ThemaCards stats={stats} concerns={concerns} />
         </section>
 
         {/* Recente burger-inzendingen */}

@@ -43,6 +43,21 @@ export const CATEGORY_LABEL_NL: Record<ConcernCategory, string> = {
   noise_livability: "Geluid & leefbaarheid",
 };
 
+export const CONCERN_CATEGORIES: ConcernCategory[] = [
+  "traffic_parking",
+  "building_height",
+  "green_nature",
+  "noise_livability",
+];
+
+export const PERSONA_LABEL_NL: Record<PersonaType, string> = {
+  young_family: "Jong gezin",
+  elderly_resident: "Oudere bewoner",
+  commuter: "Forens",
+  local_business: "Lokale ondernemer",
+  underrepresented_resident: "Ondervertegenwoordigde bewoner",
+};
+
 export type MotiveringSection = {
   category: string;
   concernCount: number;

@@ -2,17 +2,11 @@ import { readSeededConcerns } from "./concerns-json";
 import { readSupabaseConcerns } from "./concerns-supabase";
 import {
   CATEGORY_LABEL_NL,
+  CONCERN_CATEGORIES,
   type CategoryStats,
   type Concern,
   type ConcernCategory,
 } from "./types";
-
-const CATEGORIES: ConcernCategory[] = [
-  "traffic_parking",
-  "building_height",
-  "green_nature",
-  "noise_livability",
-];
 
 export async function getConcerns(): Promise<Concern[]> {
   const [seeded, supabase] = await Promise.allSettled([
@@ -54,7 +48,7 @@ function pickRepresentative(items: Concern[]): Concern | null {
 
 export function getCategoryStats(concerns: Concern[]): CategoryStats[] {
   const grouped = groupByCategory(concerns);
-  return CATEGORIES.map((category) => {
+  return CONCERN_CATEGORIES.map((category) => {
     const items = grouped[category];
     return {
       category,
