@@ -23,13 +23,12 @@ export default function HomePage() {
         >
           Voor de gemeente
         </Link>
-        <button
-          disabled
-          className="rounded-lg border border-neutral-300 text-neutral-400 px-6 py-3 font-medium cursor-not-allowed"
-          title="Binnenkort beschikbaar"
+        <Link
+          href="/burger"
+          className="rounded-lg border border-neutral-900 text-neutral-900 px-6 py-3 font-medium hover:bg-neutral-100 transition"
         >
-          Voor bewoners — binnenkort
-        </button>
+          Voor bewoners
+        </Link>
       </nav>
 
       <p className="text-xs text-neutral-400 max-w-md">

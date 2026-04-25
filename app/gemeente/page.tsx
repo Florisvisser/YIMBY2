@@ -1,6 +1,8 @@
 import { getConcerns, getCategoryStats } from "@/lib/data/concerns";
 import MotiveringPanel from "./MotiveringPanel";
 
+export const revalidate = 0;
+
 export default async function GemeentePage() {
   const concerns = await getConcerns();
   const stats = getCategoryStats(concerns);
