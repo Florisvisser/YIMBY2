@@ -68,6 +68,22 @@ export type MotiveringRequest = {
   forceFallback?: boolean;
 };
 
+export type ConcernWithAnswer = Concern & {
+  verslagAnswer?: string;
+  verslagSignedAt?: string;
+  verslagReference?: string;
+};
+
+export type PublishedReport = {
+  id: string;
+  projectId: "schapenweide";
+  signedAt: string;
+  reference: string;
+  title: string;
+  summary: string;
+  sections: MotiveringSection[];
+};
+
 export type CategoryStats = {
   category: ConcernCategory;
   label: string;

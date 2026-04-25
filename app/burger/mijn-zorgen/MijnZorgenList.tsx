@@ -5,7 +5,7 @@ import { useEffect, useState, useSyncExternalStore } from "react";
 import {
   CATEGORY_LABEL_NL,
   STATUS_LABEL_NL,
-  type Concern,
+  type ConcernWithAnswer,
   type ConcernStatus,
 } from "@/lib/data/types";
 
@@ -78,7 +78,7 @@ export default function MijnZorgenList({
   supabaseConfigured: boolean;
 }) {
   const ids = useSubmissionIds();
-  const [concerns, setConcerns] = useState<Concern[] | null>(null);
+  const [concerns, setConcerns] = useState<ConcernWithAnswer[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -97,7 +97,7 @@ export default function MijnZorgenList({
           setError(typeof data?.error === "string" ? data.error : "Kon zienswijzen niet laden.");
           return;
         }
-        setConcerns(data as Concern[]);
+        setConcerns(data as ConcernWithAnswer[]);
       } catch {
         if (!cancelled) setError("Verbinding mislukt. Probeer opnieuw.");
       }
@@ -264,6 +264,39 @@ export default function MijnZorgenList({
             >
               {c.concernText}
             </p>
+            {status === "answered" && c.verslagAnswer && (
+              <div style={{
+                background: "var(--moss-50)",
+                borderRadius: "var(--radius-card, var(--radius-md))",
+                padding: "12px 16px",
+                display: "flex",
+                flexDirection: "column",
+                gap: 6,
+              }}>
+                <div style={{
+                  fontSize: 11,
+                  fontWeight: 500,
+                  color: "var(--moss-700)",
+                  letterSpacing: "0.04em",
+                }}>
+                  Antwoord van Gemeente De Bilt
+                  {c.verslagSignedAt && (
+                    <> · ondertekend {new Date(c.verslagSignedAt).toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" })}</>
+                  )}
+                  {c.verslagReference && (
+                    <> · <span style={{ fontFamily: "var(--font-mono)", fontVariantNumeric: "tabular-nums" }}>ref. {c.verslagReference}</span></>
+                  )}
+                </div>
+                <p style={{
+                  margin: 0,
+                  fontSize: 14,
+                  lineHeight: 1.6,
+                  color: "var(--moss-700)",
+                }}>
+                  {c.verslagAnswer}
+                </p>
+              </div>
+            )}
             <div
               style={{
                 fontSize: 12,

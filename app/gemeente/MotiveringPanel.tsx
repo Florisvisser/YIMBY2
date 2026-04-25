@@ -48,37 +48,61 @@ function CheckIcon() {
   );
 }
 
-function generateReferentie(): string {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  let suffix = "";
-  for (let i = 0; i < 4; i += 1) {
-    suffix += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return `SP-2026-${suffix}`;
-}
+
+type PublishState =
+  | { status: "idle" }
+  | { status: "publishing" }
+  | { status: "published"; reference: string; signedAt: string }
+  | { status: "error"; error: string };
 
 export default function MotiveringPanel() {
   const [loading, setLoading] = useState(false);
   const [report, setReport] = useState<MotiveringReport | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [signModalOpen, setSignModalOpen] = useState(false);
-  const [pendingRef, setPendingRef] = useState<string | null>(null);
-  const [signedRef, setSignedRef] = useState<string | null>(null);
+  const [publishState, setPublishState] = useState<PublishState>({ status: "idle" });
   const requestInFlight = useRef(false);
+  const publishInFlight = useRef(false);
 
   function openSignModal() {
-    setPendingRef(generateReferentie());
+    if (publishState.status === "published") return;
     setSignModalOpen(true);
   }
 
-  function confirmSign() {
-    if (pendingRef) setSignedRef(pendingRef);
-    setSignModalOpen(false);
+  async function confirmSign() {
+    if (!report || publishInFlight.current) return;
+    publishInFlight.current = true;
+    setPublishState({ status: "publishing" });
+    try {
+      const res = await fetch("/api/reports/publish", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ report }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setPublishState({
+          status: "error",
+          error: typeof data?.error === "string" ? data.error : "Publiceren mislukt.",
+        });
+      } else {
+        setPublishState({
+          status: "published",
+          reference: data.reference as string,
+          signedAt: data.signedAt as string,
+        });
+        setSignModalOpen(false);
+      }
+    } catch {
+      setPublishState({ status: "error", error: "Verbinding mislukt bij publiceren." });
+    } finally {
+      publishInFlight.current = false;
+    }
   }
 
   function cancelSign() {
+    if (publishState.status === "publishing") return;
     setSignModalOpen(false);
-    setPendingRef(null);
   }
 
   const handleClick = async () => {
@@ -348,8 +372,9 @@ export default function MotiveringPanel() {
           </div>
 
           {/* Action buttons */}
-          <div style={{ display: "flex", gap: 10, marginTop: 4, flexWrap: "wrap", alignItems: "center" }}>
-            {signedRef ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 4 }}>
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+            {publishState.status === "published" ? (
               <span
                 style={{
                   padding: "12px 20px",
@@ -366,15 +391,20 @@ export default function MotiveringPanel() {
                 }}
               >
                 <CheckIcon />
-                Gepubliceerd ·{" "}
+                Gepubliceerd op{" "}
+                {new Date(publishState.signedAt).toLocaleDateString("nl-NL", {
+                  day: "numeric", month: "long", year: "numeric",
+                })}
+                {" · "}
                 <span style={{ fontFamily: "var(--font-mono)", fontVariantNumeric: "tabular-nums" }}>
-                  {signedRef}
+                  {publishState.reference}
                 </span>
               </span>
             ) : (
               <button
                 type="button"
                 onClick={openSignModal}
+                disabled={publishState.status === "publishing"}
                 style={{
                   padding: "12px 20px",
                   borderRadius: "var(--radius-md)",
@@ -384,11 +414,12 @@ export default function MotiveringPanel() {
                   fontFamily: "var(--font-sans)",
                   fontSize: 14,
                   fontWeight: 500,
-                  cursor: "pointer",
+                  cursor: publishState.status === "publishing" ? "wait" : "pointer",
                   boxShadow: "var(--shadow-sm)",
                   display: "inline-flex",
                   alignItems: "center",
                   gap: 8,
+                  opacity: publishState.status === "publishing" ? 0.7 : 1,
                 }}
               >
                 <CheckIcon />
@@ -410,7 +441,7 @@ export default function MotiveringPanel() {
               Bewerken
             </button>
             <button
-              onClick={() => { setReport(null); setError(null); }}
+              onClick={() => { setReport(null); setError(null); setPublishState({ status: "idle" }); }}
               style={{
                 padding: "12px 20px",
                 borderRadius: "var(--radius-md)",
@@ -425,6 +456,22 @@ export default function MotiveringPanel() {
             >
               Opnieuw genereren
             </button>
+            </div>
+            {publishState.status === "error" && (
+              <div style={{
+                background: "var(--rose-50)",
+                borderRadius: "var(--radius-md)",
+                padding: "10px 14px",
+                fontSize: 13,
+                color: "var(--rose-500)",
+                display: "flex",
+                gap: 8,
+                alignItems: "flex-start",
+              }}>
+                <WarnIcon />
+                {publishState.error}
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -510,13 +557,14 @@ export default function MotiveringPanel() {
                 fontVariantNumeric: "tabular-nums",
                 letterSpacing: "0.04em",
               }}>
-                {pendingRef}
+                SP-2026-…
               </span>
             </div>
             <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 4 }}>
               <button
                 type="button"
                 onClick={cancelSign}
+                disabled={publishState.status === "publishing"}
                 style={{
                   padding: "10px 18px",
                   borderRadius: "var(--radius-md)",
@@ -526,7 +574,8 @@ export default function MotiveringPanel() {
                   fontFamily: "var(--font-sans)",
                   fontSize: 14,
                   fontWeight: 500,
-                  cursor: "pointer",
+                  cursor: publishState.status === "publishing" ? "not-allowed" : "pointer",
+                  opacity: publishState.status === "publishing" ? 0.5 : 1,
                 }}
               >
                 Annuleer
@@ -534,6 +583,7 @@ export default function MotiveringPanel() {
               <button
                 type="button"
                 onClick={confirmSign}
+                disabled={publishState.status === "publishing"}
                 style={{
                   padding: "10px 18px",
                   borderRadius: "var(--radius-md)",
@@ -543,15 +593,16 @@ export default function MotiveringPanel() {
                   fontFamily: "var(--font-sans)",
                   fontSize: 14,
                   fontWeight: 500,
-                  cursor: "pointer",
+                  cursor: publishState.status === "publishing" ? "wait" : "pointer",
                   boxShadow: "var(--shadow-sm)",
                   display: "inline-flex",
                   alignItems: "center",
                   gap: 8,
+                  opacity: publishState.status === "publishing" ? 0.7 : 1,
                 }}
               >
                 <CheckIcon />
-                Bevestig & publiceer
+                {publishState.status === "publishing" ? "Publiceren…" : "Bevestig & publiceer"}
               </button>
             </div>
           </div>
