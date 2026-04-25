@@ -140,7 +140,7 @@ export default function MotiveringPanel() {
           gap: 16,
         }}>
           <div style={{ fontSize: 11, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.18em", color: "var(--fg-tertiary)" }}>
-            AI-motivering
+            Verslag
           </div>
           <h2 style={{
             margin: 0,
@@ -151,10 +151,10 @@ export default function MotiveringPanel() {
             color: "var(--ink-900)",
             fontVariationSettings: "'opsz' 144, 'SOFT' 50",
           }}>
-            Genereer een concept-verslag uit alle zienswijzen
+            Rond alle zienswijzen af in één verslag
           </h2>
           <p style={{ margin: 0, fontSize: 14.5, lineHeight: 1.6, color: "var(--fg-secondary)", maxWidth: 640 }}>
-            Eén Claude-call. Per thema een ambtelijke motivering, een B1-uitleg voor bewoners, en concrete review-aandachtspunten. U reviewt en ondertekent.
+            Het verslag bundelt per thema de zienswijzen, jouw antwoord aan bewoners en de voorgestelde planwijziging. U reviewt en ondertekent.
           </p>
 
           <button

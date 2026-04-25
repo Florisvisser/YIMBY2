@@ -378,8 +378,8 @@ function ThemaModal({
                           width: "100%",
                           height: `${Math.max(heightPct, count > 0 ? 4 : 0)}%`,
                           background: tone.bg,
-                          borderTop: `2px solid ${tone.fg}`,
-                          borderRadius: "var(--radius-sm) var(--radius-sm) 0 0",
+                          border: `1.5px solid ${tone.fg}`,
+                          borderRadius: "var(--radius-sm)",
                           minHeight: count > 0 ? 6 : 0,
                           transition: "height 200ms ease",
                         }}

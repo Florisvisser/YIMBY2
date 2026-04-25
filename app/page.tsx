@@ -129,18 +129,6 @@ export default function HomePage() {
           <SamenspraakMark />
         </div>
 
-        {/* Eyebrow */}
-        <p style={{
-          fontSize: 11,
-          fontWeight: 500,
-          textTransform: "uppercase",
-          letterSpacing: "0.18em",
-          color: "var(--fg-tertiary)",
-          marginBottom: 16,
-        }}>
-          Schapenweide · Bilthoven · 2026
-        </p>
-
         {/* Display title */}
         <h1 style={{
           fontFamily: "var(--font-display)",
