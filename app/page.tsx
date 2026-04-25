@@ -10,6 +10,105 @@ function SamenspraakMark() {
   );
 }
 
+type StepAccent = "clay" | "moss" | "ink";
+
+const STEP_TONES: Record<StepAccent, { bg: string; ring: string; fg: string; numFg: string }> = {
+  clay: {
+    bg: "var(--clay-100, #F5E1D0)",
+    ring: "var(--clay-500, #C97D4A)",
+    fg: "var(--clay-700, #7A3F1A)",
+    numFg: "var(--clay-700, #7A3F1A)",
+  },
+  moss: {
+    bg: "var(--moss-50, #E8F0DF)",
+    ring: "var(--moss-500, #406A2C)",
+    fg: "var(--moss-700, #1F3F12)",
+    numFg: "var(--moss-700, #1F3F12)",
+  },
+  ink: {
+    bg: "var(--paper-0, #FFFFFF)",
+    ring: "var(--ink-900, #1A1612)",
+    fg: "var(--ink-700, #2A2520)",
+    numFg: "var(--ink-900, #1A1612)",
+  },
+};
+
+function FlowStep({
+  n,
+  accent,
+  title,
+}: {
+  n: number;
+  accent: StepAccent;
+  title: string;
+}) {
+  const tone = STEP_TONES[accent];
+  return (
+    <li
+      style={{
+        listStyle: "none",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: 10,
+        flex: "1 1 120px",
+        minWidth: 0,
+      }}
+    >
+      <div
+        style={{
+          width: 36,
+          height: 36,
+          borderRadius: "50%",
+          background: tone.bg,
+          boxShadow: `inset 0 0 0 1.5px ${tone.ring}`,
+          color: tone.numFg,
+          fontFamily: "var(--font-mono)",
+          fontSize: 14,
+          fontWeight: 600,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontVariantNumeric: "tabular-nums",
+        }}
+      >
+        {n}
+      </div>
+      <span
+        style={{
+          fontSize: 13,
+          lineHeight: 1.45,
+          color: tone.fg,
+          textAlign: "center",
+          fontWeight: 500,
+          textWrap: "balance",
+        }}
+      >
+        {title}
+      </span>
+    </li>
+  );
+}
+
+function FlowConnector() {
+  return (
+    <li
+      aria-hidden="true"
+      style={{
+        listStyle: "none",
+        flex: "0 0 16px",
+        alignSelf: "center",
+        marginTop: -16,
+        color: "var(--fg-tertiary)",
+        fontFamily: "var(--font-mono)",
+        fontSize: 13,
+      }}
+    >
+      →
+    </li>
+  );
+}
+
 export default function HomePage() {
   return (
     <main
@@ -62,12 +161,32 @@ export default function HomePage() {
           fontSize: 17,
           lineHeight: 1.6,
           color: "var(--fg-secondary)",
-          margin: "0 0 48px 0",
+          margin: "0 0 36px 0",
           maxWidth: 440,
           textWrap: "balance",
         }}>
           Burgerparticipatie als bewijsbare feedback-loop, niet als juridisch vinkje.
         </p>
+
+        {/* Drie-staps verhaal */}
+        <ol
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            justifyContent: "center",
+            gap: 4,
+            padding: 0,
+            margin: "0 0 48px 0",
+            width: "100%",
+            maxWidth: 480,
+          }}
+        >
+          <FlowStep n={1} accent="clay" title="Bewoner meldt zienswijze" />
+          <FlowConnector />
+          <FlowStep n={2} accent="moss" title="AI analyseert en motiveert" />
+          <FlowConnector />
+          <FlowStep n={3} accent="ink" title="Gemeente ondertekent antwoord" />
+        </ol>
 
         {/* CTAs */}
         <nav style={{ display: "flex", flexDirection: "column", gap: 12, width: "100%", maxWidth: 320 }}>
