@@ -7,14 +7,16 @@ Lees eerst `/AGENTS.md` voor de project-regels. Hier staat alleen wat specifiek 
 ```
 lib/
   data/
-    types.ts          ConcernCategory, Concern, MotiveringReport types
-    concerns-json.ts  raw read uit data/seeded-concerns.json
-    concerns.ts       adapter: getConcerns(), groupByCategory(), getCategoryStats()
+    types.ts              ConcernCategory, Concern, MotiveringReport types
+    concerns-json.ts      raw read uit data/seeded-concerns.json
+    concerns-supabase.ts  read+insert via Supabase REST + service-role key
+    concerns.ts           adapter: getConcerns() (seed ⊕ DB), groupByCategory(), getCategoryStats()
+    schema-concern.ts     zod schema voor /api/concerns POST body
   motivering/
-    schema.ts         zod schema voor MotiveringReport
-    fallback.ts       getFallbackReport() — leest + valideert data/motivering-fallback.json
+    schema.ts             zod schema voor MotiveringReport
+    fallback.ts           getFallbackReport() — leest + valideert data/motivering-fallback.json
   prompts/
-    motivering.ts     buildMotiveringPrompt(concerns) → string
+    motivering.ts         buildMotiveringPrompt(concerns) → string
 ```
 
 ## Patroon: Claude-call (`/api/motivering`)
@@ -33,8 +35,22 @@ lib/
 - **Geen `any`.** Als TS klaagt: fix het type.
 - **Geen retry** bij Claude-fout — fallback is sneller en demo-veiliger.
 - **Timeout 30s** via `AbortController` + `setTimeout`. Daarna fallback.
-- **Adapter discipline**: components mogen `lib/data/concerns.ts` importeren, nooit direct `data/seeded-concerns.json`.
+- **Adapter discipline**: components mogen `lib/data/concerns.ts` importeren, nooit direct `data/seeded-concerns.json` of `concerns-supabase.ts`.
 - **Pure functies**: geen state, geen caching tussen requests.
+
+## Adapter — `getConcerns()` (Phase 2)
+
+```ts
+const [seeded, supa] = await Promise.allSettled([
+  readSeededConcerns(),
+  readSupabaseConcerns(),
+]);
+```
+
+- Beide bronnen worden *altijd* geprobeerd. `Promise.allSettled` (nooit `Promise.all`) zodat één faalt nooit de ander killt.
+- **Stille fallback** als Supabase env vars ontbreken: `readSupabaseConcerns()` retourneert `[]` met `console.warn`. Demo blijft werken op alleen seeded JSON.
+- Output gesorteerd op `submittedAt` desc — nieuwste eerst.
+- Snake_case → camelCase mapping gebeurt in `concerns-supabase.ts`. Het `Concern` type blijft onaangetast.
 
 ## Severity-aggregatie
 

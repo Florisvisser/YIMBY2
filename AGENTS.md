@@ -8,11 +8,13 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 Dit project is een hackathon-demo. We bouwen met twee non-technical mensen via Claude Code. Volg deze regels strikt; ze voorkomen demo-falen.
 
-## Scope (Phase 1 — demo-stabiel)
+## Scope
 
-**Wel bouwen**: `/`, `/gemeente`, `/api/seeded-concerns`, `/api/motivering`, `data/seeded-concerns.json` (50 items), `data/motivering-fallback.json`.
+**Phase 1 (af)**: `/`, `/gemeente`, `/api/seeded-concerns`, `/api/motivering`, `data/seeded-concerns.json` (50 items), `data/motivering-fallback.json`.
 
-**Niet bouwen** in Phase 1: Supabase, auth, PDOK, `/burger`, multi-language, speech, kaarten, real-time updates, developer-perspectief.
+**Phase 2 (huidig)**: `/burger` (3-stappen wizard), `/api/concerns` (POST + Supabase insert + revalidatePath), `/api/pdok` (Locatieserver proxy), Supabase `concerns` tabel, `lib/data/concerns-supabase.ts` adapter. `getConcerns()` retourneert seed ⊕ DB.
+
+**Niet bouwen** (ook in Phase 2 niet): auth, multi-language, speech, kaarten, **live realtime dashboard updates** (refresh van `/gemeente` is voldoende — Supabase Realtime is *niet* aangezet), developer-perspectief.
 
 ## Architectuur-regels (hard)
 
@@ -43,16 +45,27 @@ Voor je `app/`, `route.ts`, of metadata aanraakt: open `node_modules/next/dist/d
 
 ## Werkverdeling (zie ook plan-bestand)
 
-- **Persoon A** = `lib/**`, `app/api/**`, schema, prompts, fallback-logica.
-- **Persoon B** = `data/*.json`, `app/page.tsx`, `app/gemeente/page.tsx`, `app/layout.tsx`.
+- **Persoon A** = `lib/**`, `app/api/**`, schema, prompts, fallback-logica, Supabase adapter + migration.
+- **Persoon B** = `data/*.json`, `app/page.tsx`, `app/gemeente/**`, `app/burger/**`, `app/layout.tsx`.
 
 Raak elkaars files niet aan zonder overleg. Gedeelde files (`package.json`, `globals.css`, deze MD's) alleen tijdens gezamenlijke sessies.
+
+## Env vars
+
+| Var | Waar | Scope |
+|---|---|---|
+| `ANTHROPIC_API_KEY` | `.env.local` + Vercel | Server only — Claude motiveringsverslag |
+| `NEXT_PUBLIC_SUPABASE_URL` | `.env.local` + Vercel | Publiek (URL zit in client bundle) |
+| `SUPABASE_ANON_KEY` | `.env.local` + Vercel | Server only — publishable / anon key |
+
+Supabase-toegang draait op de **anon key** + RLS policies: anon mag INSERT en SELECT op `concerns`, geen UPDATE/DELETE. Geen service-role key in deze app. Als Supabase env vars ontbreken: `getConcerns()` valt stil terug op alleen seeded JSON; `/api/concerns` POST faalt met 500 + duidelijke message.
 
 ## Per-map agent-instructies
 
 Naast deze AGENTS.md staan er per werkgebied submap-`CLAUDE.md` files met specifieke regels. Claude Code laadt ze automatisch zodra je in die submap werkt:
 
-- `lib/CLAUDE.md` — Persoon A: data-adapter + Claude SDK patroon
-- `app/api/CLAUDE.md` — Persoon A: route handler conventies (Next 16)
+- `lib/CLAUDE.md` — Persoon A: data-adapter (seed + Supabase) + Claude SDK patroon
+- `app/api/CLAUDE.md` — Persoon A: route handler conventies (Next 16) — `/api/motivering`, `/api/concerns`, `/api/pdok`
 - `app/gemeente/CLAUDE.md` — Persoon B: Server/Client split + dashboard regels
+- `app/burger/CLAUDE.md` — Persoon B: 3-stappen wizard, persona-default
 - `data/CLAUDE.md` — Persoon B: shape, aantallen, schrijfregels voor seeded data en fallback

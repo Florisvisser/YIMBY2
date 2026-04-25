@@ -2,12 +2,18 @@
 
 Lees eerst `/AGENTS.md` en `/lib/CLAUDE.md`. Hier staat alleen route-handler-specifieke info.
 
-## Routes (Phase 1)
+## Routes
 
-| Route | Method | Body | Returns |
+| Route | Method | Body / Query | Returns |
 |---|---|---|---|
-| `/api/seeded-concerns` | `GET` | — | `Concern[]` (alle 50) |
+| `/api/seeded-concerns` | `GET` | — | `Concern[]` (seeded 50) |
 | `/api/motivering` | `POST` | `{ projectId: "schapenweide", forceFallback?: boolean }` | `MotiveringReport` |
+| `/api/concerns` | `POST` | `{ postcode, neighbourhood, streetReference?, category, severity (1–5), concernText }` | `201` + `Concern` |
+| `/api/pdok` | `GET` | `?postcode=3722HD&huisnummer=12` | `{ postcode, neighbourhood, streetReference? }` |
+
+**`/api/concerns`** valideert via `ConcernSubmitSchema` (`lib/data/schema-concern.ts`), inserted via service-role key, roept `revalidatePath('/gemeente')` aan zodat refresh van het dashboard de nieuwe zienswijze toont. Server vult `projectId='schapenweide'`, `personaType='underrepresented_resident'`, `submittedAt=now()`. Bij DB/env-fail: `500` + `{ error }`.
+
+**`/api/pdok`** proxy naar `https://api.pdok.nl/bzk/locatieserver/search/v3_1/free`. Geen API-key nodig. Bij geen match: `404`. Bij PDOK down: `502`. Normaliseert postcode terug naar `"1234 AB"` formaat.
 
 ## Next.js 16 valkuil
 
