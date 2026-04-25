@@ -93,6 +93,8 @@ export type SuggestResult = {
   lon?: number;
 };
 
+export type ResidentLanguage = "nl" | "en" | "es";
+
 export type ProfileData = {
   voornaam: string;
   achternaam: string;
@@ -101,6 +103,7 @@ export type ProfileData = {
   neighbourhood: string;
   straatnaam: string;
   huis_nlt: string;
+  language: ResidentLanguage;
   lat?: number;
   lon?: number;
 };

@@ -4,7 +4,7 @@ import { buildPlanUitlegPrompt } from "@/lib/prompts/plan-uitleg";
 import { PlanUitlegReportSchema } from "@/lib/plan-uitleg/schema";
 import { getFallbackPlanUitleg } from "@/lib/plan-uitleg/fallback";
 import { extractJson } from "@/lib/prompts/utils";
-import type { PlanUitlegReport } from "@/lib/data/types";
+import type { PlanUitlegReport, ResidentLanguage } from "@/lib/data/types";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -16,6 +16,7 @@ const RequestSchema = z.object({
   voornaam: z.string().min(1).max(100),
   straatnaam: z.string().min(1).max(200),
   postcode: z.string().min(4).max(10),
+  language: z.enum(["nl", "en", "es"]).default("nl"),
   forceFallback: z.boolean().optional(),
 });
 
@@ -23,6 +24,7 @@ async function tryClaude(
   voornaam: string,
   straatnaam: string,
   postcode: string,
+  language: ResidentLanguage,
 ): Promise<PlanUitlegReport | null> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return null;
@@ -32,7 +34,7 @@ async function tryClaude(
 
   try {
     const client = new Anthropic({ apiKey });
-    const prompt = buildPlanUitlegPrompt(voornaam, straatnaam, postcode);
+    const prompt = buildPlanUitlegPrompt(voornaam, straatnaam, postcode, language);
     const message = await client.messages.create(
       {
         model: MODEL,
@@ -76,16 +78,19 @@ export async function POST(request: Request) {
     );
   }
 
-  const { voornaam, straatnaam, forceFallback } = parsed.data;
+  const { voornaam, straatnaam, language, forceFallback } = parsed.data;
 
   if (forceFallback) {
-    return Response.json(getFallbackPlanUitleg(voornaam, straatnaam));
+    return Response.json(getFallbackPlanUitleg(voornaam, straatnaam, language));
   }
 
   const claudeResult = await tryClaude(
     voornaam,
     straatnaam,
     parsed.data.postcode,
+    language,
   );
-  return Response.json(claudeResult ?? getFallbackPlanUitleg(voornaam, straatnaam));
+  return Response.json(
+    claudeResult ?? getFallbackPlanUitleg(voornaam, straatnaam, language),
+  );
 }

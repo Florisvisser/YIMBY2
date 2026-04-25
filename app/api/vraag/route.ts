@@ -2,7 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import type { MessageParam } from "@anthropic-ai/sdk/resources/messages";
 import { z } from "zod";
 import { buildVraagSystem } from "@/lib/prompts/vraag";
-import type { VraagResponse } from "@/lib/data/types";
+import type { ResidentLanguage, VraagResponse } from "@/lib/data/types";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -21,11 +21,15 @@ const RequestSchema = z.object({
   voornaam: z.string().min(1).max(100),
   straatnaam: z.string().max(200),
   postcode: z.string().max(10),
+  language: z.enum(["nl", "en", "es"]).default("nl"),
   forceFallback: z.boolean().optional(),
 });
 
-const FALLBACK_ANSWER =
-  "Dat weet ik helaas niet zeker. Kijk voor meer informatie op schapenweidebilthoven.nl of bel de gemeente via 030 – 220 28 00.";
+const FALLBACK_ANSWER: Record<ResidentLanguage, string> = {
+  nl: "Dat weet ik helaas niet zeker. Kijk voor meer informatie op schapenweidebilthoven.nl of bel de gemeente via 030 – 220 28 00.",
+  en: "I'm not sure about that. For more information, visit schapenweidebilthoven.nl or call the municipality at 030 – 220 28 00.",
+  es: "No estoy seguro/a. Para más información, visita schapenweidebilthoven.nl o llama al ayuntamiento al 030 – 220 28 00.",
+};
 
 async function tryClaude(
   question: string,
@@ -33,6 +37,7 @@ async function tryClaude(
   voornaam: string,
   straatnaam: string,
   postcode: string,
+  language: ResidentLanguage,
 ): Promise<string | null> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return null;
@@ -46,7 +51,7 @@ async function tryClaude(
       {
         model: MODEL,
         max_tokens: 1024,
-        system: buildVraagSystem(voornaam, straatnaam, postcode),
+        system: buildVraagSystem(voornaam, straatnaam, postcode, language),
         messages: [...history.slice(-10), { role: "user", content: question }],
       },
       { signal: controller.signal },
@@ -79,12 +84,12 @@ export async function POST(request: Request) {
     );
   }
 
-  const { question, history, voornaam, straatnaam, postcode, forceFallback } =
+  const { question, history, voornaam, straatnaam, postcode, language, forceFallback } =
     parsed.data;
 
   if (forceFallback) {
     return Response.json({
-      answer: FALLBACK_ANSWER,
+      answer: FALLBACK_ANSWER[language],
       source: "fallback",
     } satisfies VraagResponse);
   }
@@ -95,10 +100,11 @@ export async function POST(request: Request) {
     voornaam,
     straatnaam,
     postcode,
+    language,
   );
 
   return Response.json({
-    answer: answer ?? FALLBACK_ANSWER,
+    answer: answer ?? FALLBACK_ANSWER[language],
     source: answer ? "claude" : "fallback",
   } satisfies VraagResponse);
 }

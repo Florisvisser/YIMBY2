@@ -343,6 +343,7 @@ export default function BurgerForm() {
           straatnaam: data.straatnaam,
           postcode: data.postcode,
           neighbourhood: data.neighbourhood,
+          language: data.language,
         }),
       });
       if (!res.ok) throw new Error(`plan-uitleg ${res.status}`);
@@ -404,6 +405,7 @@ export default function BurgerForm() {
           voornaam: profile.voornaam,
           straatnaam: profile.straatnaam,
           postcode: profile.postcode,
+          language: profile.language,
         }),
       });
       const data = (await res.json()) as VraagResponse;
@@ -413,14 +415,16 @@ export default function BurgerForm() {
         { role: "assistant", content: data.answer },
       ]);
     } catch {
+      const fallbackText =
+        profile.language === "en"
+          ? "I'm not sure about that. Visit schapenweidebilthoven.nl or call 030 – 220 28 00."
+          : profile.language === "es"
+            ? "No estoy seguro/a. Visita schapenweidebilthoven.nl o llama al 030 – 220 28 00."
+            : "Dat weet ik helaas niet zeker. Kijk op schapenweidebilthoven.nl of bel 030 – 220 28 00.";
       setChatHistory((prev) => [
         ...prev,
         { role: "user", content: question },
-        {
-          role: "assistant",
-          content:
-            "Dat weet ik helaas niet zeker. Kijk op schapenweidebilthoven.nl of bel 030 – 220 28 00.",
-        },
+        { role: "assistant", content: fallbackText },
       ]);
     } finally {
       setChatSendInFlight(false);
