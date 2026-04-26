@@ -38,6 +38,16 @@ export async function POST(request: Request) {
       reportResult.status === "fulfilled" ? reportResult.value : null;
 
     const enriched: ConcernWithAnswer[] = concerns.map((c) => {
+      // Per-zorg signed answer heeft voorrang boven thema-verslag join.
+      if (c.signedAnswer && c.signedAnswerAt) {
+        return {
+          ...c,
+          verslagAnswer: c.signedAnswer,
+          verslagSignedAt: c.signedAnswerAt,
+          verslagReference: c.signedAnswerReference,
+        };
+      }
+
       if (c.status !== "answered" || !report) return c;
 
       const categoryLabel = CATEGORY_LABEL_NL[c.category];

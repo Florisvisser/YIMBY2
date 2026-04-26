@@ -28,6 +28,10 @@ export type Concern = {
   concernText: string;
   personaType: PersonaType;
   submittedAt: string;
+  aiSuggestedAnswer?: string;
+  signedAnswer?: string;
+  signedAnswerAt?: string;
+  signedAnswerReference?: string;
 };
 
 export const STATUS_LABEL_NL: Record<ConcernStatus, string> = {

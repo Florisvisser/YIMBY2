@@ -84,9 +84,18 @@ export default function RecenteInzendingen({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [suggestions, setSuggestions] = useState<Record<string, SuggestionState>>({});
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
+  const [perConcernDraft, setPerConcernDraft] = useState<Record<string, string>>({});
+  const [perConcernState, setPerConcernState] = useState<
+    Record<string, "idle" | "regenerating" | "publishing" | "published" | "error">
+  >({});
+  const [perConcernSigned, setPerConcernSigned] = useState<
+    Record<string, { text: string; reference: string; signedAt: string }>
+  >({});
+  const [perConcernError, setPerConcernError] = useState<Record<string, string>>({});
   const inFlight = useRef<Record<string, boolean>>({});
   const suggestInFlight = useRef<Record<string, boolean>>({});
   const bulkInFlight = useRef<Record<string, boolean>>({});
+  const perConcernInFlight = useRef<Record<string, boolean>>({});
 
   const enriched = concerns.map((c) => ({
     ...c,
@@ -200,6 +209,87 @@ export default function RecenteInzendingen({
       }));
     } finally {
       suggestInFlight.current[category] = false;
+    }
+  }
+
+  function getDraftFor(c: Concern): string {
+    if (perConcernDraft[c.id] !== undefined) return perConcernDraft[c.id];
+    return c.aiSuggestedAnswer ?? "";
+  }
+
+  async function regeneratePerConcernSuggestion(id: string) {
+    if (perConcernInFlight.current[id]) return;
+    perConcernInFlight.current[id] = true;
+    setPerConcernState((s) => ({ ...s, [id]: "regenerating" }));
+    setPerConcernError((e) => {
+      const next = { ...e };
+      delete next[id];
+      return next;
+    });
+    try {
+      const res = await fetch(`/api/concerns/${id}/suggest-answer`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      const data = (await res.json()) as { aiSuggestedAnswer?: string; error?: string };
+      if (!res.ok || !data.aiSuggestedAnswer) {
+        setPerConcernError((e) => ({
+          ...e,
+          [id]: data.error ?? "Suggestie genereren mislukt.",
+        }));
+        setPerConcernState((s) => ({ ...s, [id]: "error" }));
+      } else {
+        setPerConcernDraft((d) => ({ ...d, [id]: data.aiSuggestedAnswer! }));
+        setPerConcernState((s) => ({ ...s, [id]: "idle" }));
+      }
+    } catch {
+      setPerConcernError((e) => ({ ...e, [id]: "Verbinding mislukt." }));
+      setPerConcernState((s) => ({ ...s, [id]: "error" }));
+    } finally {
+      perConcernInFlight.current[id] = false;
+    }
+  }
+
+  async function publishPerConcernAnswer(c: Concern) {
+    const text = getDraftFor(c).trim();
+    if (text.length < 10 || perConcernInFlight.current[c.id]) return;
+    perConcernInFlight.current[c.id] = true;
+    setPerConcernState((s) => ({ ...s, [c.id]: "publishing" }));
+    setPerConcernError((e) => {
+      const next = { ...e };
+      delete next[c.id];
+      return next;
+    });
+    try {
+      const res = await fetch(`/api/concerns/${c.id}/answer`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ answerText: text }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setPerConcernError((e) => ({
+          ...e,
+          [c.id]: typeof data?.error === "string" ? data.error : "Publiceren mislukt.",
+        }));
+        setPerConcernState((s) => ({ ...s, [c.id]: "error" }));
+      } else {
+        setOverrides((o) => ({ ...o, [c.id]: "answered" }));
+        setPerConcernSigned((p) => ({
+          ...p,
+          [c.id]: {
+            text,
+            reference: data.signedAnswerReference ?? "—",
+            signedAt: data.signedAnswerAt ?? new Date().toISOString(),
+          },
+        }));
+        setPerConcernState((s) => ({ ...s, [c.id]: "published" }));
+      }
+    } catch {
+      setPerConcernError((e) => ({ ...e, [c.id]: "Verbinding mislukt." }));
+      setPerConcernState((s) => ({ ...s, [c.id]: "error" }));
+    } finally {
+      perConcernInFlight.current[c.id] = false;
     }
   }
 
@@ -412,26 +502,51 @@ export default function RecenteInzendingen({
                       {snippet(c.concernText)}
                     </p>
 
-                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                      {showInReviewBtn && (
-                        <button
-                          type="button"
-                          onClick={() => setStatus(c.id, "in_review", status)}
-                          style={statusButtonStyle("amber")}
-                        >
-                          Markeer in behandeling
-                        </button>
-                      )}
-                      {showAnsweredBtn && (
-                        <button
-                          type="button"
-                          onClick={() => setStatus(c.id, "answered", status)}
-                          style={statusButtonStyle("moss")}
-                        >
-                          Markeer beantwoord
-                        </button>
-                      )}
-                    </div>
+                    <PerConcernAnswerCard
+                      concern={c}
+                      published={
+                        perConcernSigned[c.id]
+                          ? perConcernSigned[c.id]
+                          : c.signedAnswer && c.signedAnswerAt
+                            ? {
+                                text: c.signedAnswer,
+                                reference: c.signedAnswerReference ?? "—",
+                                signedAt: c.signedAnswerAt,
+                              }
+                            : null
+                      }
+                      draft={getDraftFor(c)}
+                      onDraftChange={(value) =>
+                        setPerConcernDraft((d) => ({ ...d, [c.id]: value }))
+                      }
+                      state={perConcernState[c.id] ?? "idle"}
+                      error={perConcernError[c.id]}
+                      onRegenerate={() => regeneratePerConcernSuggestion(c.id)}
+                      onPublish={() => publishPerConcernAnswer(c)}
+                    />
+
+                    {!c.signedAnswer && !perConcernSigned[c.id] && (
+                      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                        {showInReviewBtn && (
+                          <button
+                            type="button"
+                            onClick={() => setStatus(c.id, "in_review", status)}
+                            style={statusButtonStyle("amber")}
+                          >
+                            Markeer in behandeling
+                          </button>
+                        )}
+                        {showAnsweredBtn && (
+                          <button
+                            type="button"
+                            onClick={() => setStatus(c.id, "answered", status)}
+                            style={statusButtonStyle("moss")}
+                          >
+                            Alleen status: beantwoord (zonder tekst)
+                          </button>
+                        )}
+                      </div>
+                    )}
 
                     {errors[c.id] && (
                       <div
@@ -785,6 +900,187 @@ export default function RecenteInzendingen({
               </div>
             );
           })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+type PerConcernState = "idle" | "regenerating" | "publishing" | "published" | "error";
+
+function PerConcernAnswerCard({
+  concern,
+  published,
+  draft,
+  onDraftChange,
+  state,
+  error,
+  onRegenerate,
+  onPublish,
+}: {
+  concern: Concern;
+  published: { text: string; reference: string; signedAt: string } | null;
+  draft: string;
+  onDraftChange: (value: string) => void;
+  state: PerConcernState;
+  error?: string;
+  onRegenerate: () => void;
+  onPublish: () => void;
+}) {
+  if (published) {
+    return (
+      <div
+        style={{
+          background: "var(--moss-50)",
+          borderRadius: "var(--radius-md)",
+          padding: "12px 14px",
+          display: "flex",
+          flexDirection: "column",
+          gap: 6,
+        }}
+      >
+        <div style={{ fontSize: 11, fontWeight: 500, color: "var(--moss-700)" }}>
+          Antwoord verstuurd · ondertekend{" "}
+          {new Date(published.signedAt).toLocaleDateString("nl-NL", {
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+          })}{" "}
+          ·{" "}
+          <span
+            style={{
+              fontFamily: "var(--font-mono)",
+              fontVariantNumeric: "tabular-nums",
+            }}
+          >
+            ref. {published.reference}
+          </span>
+        </div>
+        <p style={{ margin: 0, fontSize: 13.5, lineHeight: 1.6, color: "var(--moss-700)" }}>
+          {published.text}
+        </p>
+      </div>
+    );
+  }
+
+  const hasDraft = draft.trim().length > 0;
+  const tooShort = hasDraft && draft.trim().length < 10;
+  const isBusy = state === "regenerating" || state === "publishing";
+
+  return (
+    <div
+      style={{
+        background: "var(--moss-50, #E8F0DF)",
+        borderRadius: "var(--radius-md)",
+        padding: "12px 14px",
+        display: "flex",
+        flexDirection: "column",
+        gap: 8,
+      }}
+    >
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+        <span
+          style={{
+            fontSize: 10,
+            fontWeight: 500,
+            textTransform: "uppercase",
+            letterSpacing: "0.12em",
+            color: "var(--moss-700)",
+          }}
+        >
+          AI-suggestie · bewerk vóór verzenden
+        </span>
+        {state === "regenerating" && (
+          <span style={{ fontSize: 11, color: "var(--fg-tertiary)" }}>genereren…</span>
+        )}
+      </div>
+
+      {hasDraft ? (
+        <textarea
+          value={draft}
+          onChange={(e) => onDraftChange(e.target.value)}
+          rows={4}
+          disabled={isBusy}
+          style={{
+            width: "100%",
+            padding: "10px 12px",
+            fontSize: 13.5,
+            fontFamily: "var(--font-sans)",
+            lineHeight: 1.55,
+            borderRadius: "var(--radius-sm)",
+            border: "1px solid var(--border-medium)",
+            background: "var(--paper-0)",
+            color: "var(--ink-900)",
+            outline: "none",
+            boxSizing: "border-box",
+            resize: "vertical",
+            opacity: isBusy ? 0.6 : 1,
+          }}
+        />
+      ) : (
+        <p style={{ margin: 0, fontSize: 12.5, color: "var(--fg-tertiary)", fontStyle: "italic" }}>
+          {state === "regenerating"
+            ? "AI-suggestie wordt gegenereerd…"
+            : `Nog geen suggestie beschikbaar voor zienswijze in ${concern.neighbourhood}. Klik op "Genereer" om er één te maken.`}
+        </p>
+      )}
+
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+        <button
+          type="button"
+          onClick={onPublish}
+          disabled={!hasDraft || tooShort || isBusy}
+          style={{
+            padding: "8px 14px",
+            fontSize: 13,
+            fontWeight: 500,
+            fontFamily: "var(--font-sans)",
+            background: !hasDraft || tooShort || isBusy ? "var(--paper-100)" : "var(--moss-500)",
+            color: !hasDraft || tooShort || isBusy ? "var(--fg-muted)" : "var(--paper-50)",
+            border: "none",
+            borderRadius: "var(--radius-md)",
+            cursor: !hasDraft || tooShort || isBusy ? "not-allowed" : "pointer",
+            boxShadow: "var(--shadow-sm)",
+          }}
+        >
+          {state === "publishing" ? "Versturen…" : "Beantwoord & verstuur"}
+        </button>
+        <button
+          type="button"
+          onClick={onRegenerate}
+          disabled={isBusy}
+          style={{
+            padding: "8px 14px",
+            fontSize: 13,
+            fontWeight: 500,
+            fontFamily: "var(--font-sans)",
+            background: "var(--paper-0)",
+            color: "var(--ink-700)",
+            border: "none",
+            borderRadius: "var(--radius-md)",
+            cursor: isBusy ? "wait" : "pointer",
+            boxShadow: "var(--shadow-hairline)",
+            opacity: isBusy ? 0.6 : 1,
+          }}
+        >
+          {hasDraft ? "Genereer opnieuw" : "Genereer"}
+        </button>
+        {tooShort && (
+          <span style={{ fontSize: 11, color: "var(--rose-500)" }}>min. 10 tekens</span>
+        )}
+      </div>
+
+      {error && (
+        <div
+          style={{
+            fontSize: 12,
+            color: "var(--rose-500)",
+            background: "var(--rose-50)",
+            padding: "6px 10px",
+            borderRadius: "var(--radius-sm)",
+          }}
+        >
+          {error}
         </div>
       )}
     </div>
