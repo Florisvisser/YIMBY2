@@ -17,7 +17,7 @@ const ChatMessageSchema = z.object({
 
 const RequestSchema = z.object({
   question: z.string().min(1).max(500),
-  history: z.array(ChatMessageSchema).max(20),
+  history: z.array(ChatMessageSchema).max(10),
   voornaam: z.string().min(1).max(100),
   straatnaam: z.string().max(200),
   postcode: z.string().max(10),
@@ -52,7 +52,7 @@ async function tryClaude(
         model: MODEL,
         max_tokens: 1024,
         system: buildVraagSystem(voornaam, straatnaam, postcode, language),
-        messages: [...history.slice(-10), { role: "user", content: question }],
+        messages: [...history, { role: "user", content: question }],
       },
       { signal: controller.signal },
     );

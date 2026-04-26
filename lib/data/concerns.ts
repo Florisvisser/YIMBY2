@@ -35,7 +35,7 @@ export function groupByCategory(
   return out;
 }
 
-function averageSeverity(items: Concern[]): number {
+export function averageSeverity(items: Concern[]): number {
   if (items.length === 0) return 0;
   const sum = items.reduce((acc, c) => acc + c.severity, 0);
   return Math.round((sum / items.length) * 10) / 10;

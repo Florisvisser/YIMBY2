@@ -9,7 +9,7 @@ import {
   type ConcernCategory,
   type ConcernStatus,
 } from "@/lib/data/types";
-import { groupByCategory } from "@/lib/data/concerns";
+import { averageSeverity, groupByCategory } from "@/lib/data/concerns";
 import { severityTone } from "./severity-utils";
 
 type FilterValue = "all" | ConcernStatus;
@@ -40,11 +40,6 @@ function formatDateTime(iso: string): string {
     hour: "2-digit",
     minute: "2-digit",
   });
-}
-
-function averageSeverity(concerns: Concern[]): number {
-  if (concerns.length === 0) return 0;
-  return Math.round((concerns.reduce((s, c) => s + c.severity, 0) / concerns.length) * 10) / 10;
 }
 
 type SuggestionState =
