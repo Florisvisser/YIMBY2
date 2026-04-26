@@ -1,4 +1,4 @@
--- Phase 2: concerns table for citizen submissions.
+-- concerns table for citizen submissions.
 -- Seeded JSON (50 items) blijft naast deze tabel bestaan; getConcerns() merget seed + DB.
 
 create table if not exists concerns (

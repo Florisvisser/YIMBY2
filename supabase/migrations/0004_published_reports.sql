@@ -1,4 +1,4 @@
--- Phase 4: published_reports tabel voor ondertekende participatieverslagen.
+-- published_reports tabel voor ondertekende participatieverslagen.
 -- Anon mag SELECT (burger-portal leest) en INSERT (gemeente publiceert via server-route).
 -- De server-route (SUPABASE_ANON_KEY is server-only) is de gatekeeper voor INSERT.
 

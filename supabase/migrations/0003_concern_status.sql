@@ -1,4 +1,4 @@
--- Phase 3: status-loop voor burger-feedback (new / in_review / answered).
+-- status-loop voor burger-feedback (new / in_review / answered).
 -- Server-route is de enige weg in (anon key is server-only); RLS UPDATE
 -- policy blijft permissief omdat Postgres geen kolom-policies kent.
 -- Voor productie: BEFORE UPDATE trigger die alleen status mag wijzigen.

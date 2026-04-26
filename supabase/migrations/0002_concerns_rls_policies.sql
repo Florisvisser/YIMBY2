@@ -1,4 +1,4 @@
--- Phase 2 demo: open insert + select voor anon role.
+-- RLS-policies: open insert + select voor anon role.
 -- Geen UPDATE/DELETE policies — voorkomt tampering van bestaande zienswijzen.
 
 create policy "anon kan zienswijze indienen"
