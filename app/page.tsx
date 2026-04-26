@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { useState } from "react";
 
 function SamenspraakMark() {
   return (
@@ -10,102 +13,163 @@ function SamenspraakMark() {
   );
 }
 
-type StepAccent = "clay" | "moss" | "ink";
+type CardAccent = "clay" | "moss";
 
-const STEP_TONES: Record<StepAccent, { bg: string; ring: string; fg: string; numFg: string }> = {
+type AccentTone = {
+  bgRest: string;
+  bgHover: string;
+  ring: string;
+  eyebrow: string;
+  title: string;
+  bullet: string;
+  arrow: string;
+};
+
+const ACCENT_TONES: Record<CardAccent, AccentTone> = {
   clay: {
-    bg: "var(--clay-100, #F5E1D0)",
+    bgRest: "var(--paper-0)",
+    bgHover: "var(--clay-50, #FBEFE2)",
     ring: "var(--clay-500, #C97D4A)",
-    fg: "var(--clay-700, #7A3F1A)",
-    numFg: "var(--clay-700, #7A3F1A)",
+    eyebrow: "var(--clay-700, #7A3F1A)",
+    title: "var(--ink-900)",
+    bullet: "var(--clay-500, #C97D4A)",
+    arrow: "var(--clay-700, #7A3F1A)",
   },
   moss: {
-    bg: "var(--moss-50, #E8F0DF)",
+    bgRest: "var(--paper-0)",
+    bgHover: "var(--moss-50, #E8F0DF)",
     ring: "var(--moss-500, #406A2C)",
-    fg: "var(--moss-700, #1F3F12)",
-    numFg: "var(--moss-700, #1F3F12)",
-  },
-  ink: {
-    bg: "var(--paper-0, #FFFFFF)",
-    ring: "var(--ink-900, #1A1612)",
-    fg: "var(--ink-700, #2A2520)",
-    numFg: "var(--ink-900, #1A1612)",
+    eyebrow: "var(--moss-700, #1F3F12)",
+    title: "var(--ink-900)",
+    bullet: "var(--moss-500, #406A2C)",
+    arrow: "var(--moss-700, #1F3F12)",
   },
 };
 
-function FlowStep({
-  n,
+function AudienceCard({
+  href,
   accent,
+  eyebrow,
   title,
+  bullets,
 }: {
-  n: number;
-  accent: StepAccent;
+  href: string;
+  accent: CardAccent;
+  eyebrow: string;
   title: string;
+  bullets: string[];
 }) {
-  const tone = STEP_TONES[accent];
+  const [hover, setHover] = useState(false);
+  const tone = ACCENT_TONES[accent];
+
   return (
-    <li
+    <Link
+      href={href}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      onFocus={() => setHover(true)}
+      onBlur={() => setHover(false)}
       style={{
-        listStyle: "none",
+        flex: "1 1 0",
+        minWidth: 0,
         display: "flex",
         flexDirection: "column",
-        alignItems: "center",
-        gap: 10,
-        flex: "1 1 120px",
-        minWidth: 0,
+        gap: 16,
+        padding: "28px 26px",
+        borderRadius: "var(--radius-lg)",
+        background: hover ? tone.bgHover : tone.bgRest,
+        boxShadow: hover ? "var(--shadow-md)" : "var(--shadow-sm), var(--shadow-hairline)",
+        textDecoration: "none",
+        color: "inherit",
+        transform: hover ? "translateY(-2px)" : "translateY(0)",
+        transition:
+          "transform var(--dur-fast) var(--ease-out), background var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out)",
+        outline: "none",
+        textAlign: "left",
       }}
     >
-      <div
-        style={{
-          width: 36,
-          height: 36,
-          borderRadius: "50%",
-          background: tone.bg,
-          boxShadow: `inset 0 0 0 1.5px ${tone.ring}`,
-          color: tone.numFg,
-          fontFamily: "var(--font-mono)",
-          fontSize: 14,
-          fontWeight: 600,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontVariantNumeric: "tabular-nums",
-        }}
-      >
-        {n}
-      </div>
       <span
         style={{
-          fontSize: 13,
-          lineHeight: 1.45,
-          color: tone.fg,
-          textAlign: "center",
+          fontSize: 11,
           fontWeight: 500,
+          textTransform: "uppercase",
+          letterSpacing: "0.14em",
+          color: tone.eyebrow,
+          fontFamily: "var(--font-mono)",
+        }}
+      >
+        {eyebrow}
+      </span>
+      <h2
+        style={{
+          fontFamily: "var(--font-display)",
+          fontSize: "clamp(20px, 2.6vw, 24px)",
+          fontWeight: 500,
+          lineHeight: 1.2,
+          letterSpacing: "-0.01em",
+          color: tone.title,
+          margin: 0,
+          fontVariationSettings: "'opsz' 144, 'SOFT' 50",
           textWrap: "balance",
         }}
       >
         {title}
+      </h2>
+      <ul
+        style={{
+          listStyle: "none",
+          padding: 0,
+          margin: 0,
+          display: "flex",
+          flexDirection: "column",
+          gap: 10,
+          fontSize: 14,
+          lineHeight: 1.5,
+          color: "var(--fg-secondary)",
+        }}
+      >
+        {bullets.map((b, i) => (
+          <li key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+            <span
+              aria-hidden="true"
+              style={{
+                width: 6,
+                height: 6,
+                borderRadius: "50%",
+                background: tone.bullet,
+                flexShrink: 0,
+                marginTop: 7,
+              }}
+            />
+            <span>{b}</span>
+          </li>
+        ))}
+      </ul>
+      <span
+        style={{
+          marginTop: "auto",
+          fontSize: 13,
+          fontWeight: 500,
+          color: tone.arrow,
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 6,
+          fontFamily: "var(--font-sans)",
+        }}
+      >
+        Open dit deel
+        <span
+          aria-hidden="true"
+          style={{
+            transform: hover ? "translateX(3px)" : "translateX(0)",
+            transition: "transform var(--dur-fast) var(--ease-out)",
+            fontFamily: "var(--font-mono)",
+          }}
+        >
+          →
+        </span>
       </span>
-    </li>
-  );
-}
-
-function FlowConnector() {
-  return (
-    <li
-      aria-hidden="true"
-      style={{
-        listStyle: "none",
-        flex: "0 0 16px",
-        alignSelf: "center",
-        marginTop: -16,
-        color: "var(--fg-tertiary)",
-        fontFamily: "var(--font-mono)",
-        fontSize: 13,
-      }}
-    >
-      →
-    </li>
+    </Link>
   );
 }
 
@@ -118,115 +182,114 @@ export default function HomePage() {
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        justifyContent: "center",
-        padding: "48px 24px",
+        padding: "64px 24px 96px",
         fontFamily: "var(--font-sans)",
       }}
     >
-      <div style={{ maxWidth: 520, width: "100%", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 0 }}>
-        {/* Mark */}
-        <div style={{ marginBottom: 32 }}>
+      <div
+        style={{
+          maxWidth: 760,
+          width: "100%",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: 0,
+        }}
+      >
+        <div style={{ marginBottom: 28 }}>
           <SamenspraakMark />
         </div>
 
-        {/* Display title */}
-        <h1 style={{
-          fontFamily: "var(--font-display)",
-          fontSize: "clamp(48px, 8vw, 72px)",
-          fontWeight: 400,
-          lineHeight: 1.05,
-          letterSpacing: "-0.02em",
-          color: "var(--ink-900)",
-          margin: "0 0 20px 0",
-          textWrap: "balance",
-          fontVariationSettings: "'SOFT' 50, 'opsz' 144, 'WONK' 0",
-        }}>
+        <h1
+          style={{
+            fontFamily: "var(--font-display)",
+            fontSize: "clamp(48px, 8vw, 72px)",
+            fontWeight: 400,
+            lineHeight: 1.05,
+            letterSpacing: "-0.02em",
+            color: "var(--ink-900)",
+            margin: "0 0 18px 0",
+            textWrap: "balance",
+            textAlign: "center",
+            fontVariationSettings: "'SOFT' 50, 'opsz' 144, 'WONK' 0",
+          }}
+        >
           Samenspraak
         </h1>
 
-        {/* Tagline */}
-        <p style={{
-          fontSize: 17,
-          lineHeight: 1.6,
-          color: "var(--fg-secondary)",
-          margin: "0 0 36px 0",
-          maxWidth: 440,
-          textWrap: "balance",
-        }}>
-          Burgerparticipatie als bewijsbare feedback-loop, niet als juridisch vinkje.
+        <p
+          style={{
+            fontSize: 19,
+            lineHeight: 1.45,
+            color: "var(--ink-700, #2A2520)",
+            margin: "0 0 18px 0",
+            maxWidth: 560,
+            textWrap: "balance",
+            textAlign: "center",
+            fontWeight: 400,
+          }}
+        >
+          Burgerparticipatie die voor jou werkt — én bewijsbaar landt bij de gemeente.
         </p>
 
-        {/* Drie-staps verhaal */}
-        <ol
+        <p
+          style={{
+            fontSize: 15,
+            lineHeight: 1.6,
+            color: "var(--fg-secondary)",
+            margin: "0 0 44px 0",
+            maxWidth: 560,
+            textWrap: "balance",
+            textAlign: "center",
+          }}
+        >
+          Schrijf in begrijpelijke taal wat je dwarszit aan een bouwplan in jouw buurt.
+          Samenspraak clustert vergelijkbare zorgen, helpt de gemeente er goed op te reageren,
+          en geeft jou een ondertekend antwoord terug — geen formulier dat verdwijnt in een lade.
+        </p>
+
+        <div
           style={{
             display: "flex",
             flexWrap: "wrap",
-            justifyContent: "center",
-            gap: 4,
-            padding: 0,
-            margin: "0 0 48px 0",
+            gap: 16,
             width: "100%",
-            maxWidth: 480,
+            alignItems: "stretch",
           }}
         >
-          <FlowStep n={1} accent="clay" title="Bewoner meldt zienswijze" />
-          <FlowConnector />
-          <FlowStep n={2} accent="moss" title="AI analyseert en motiveert" />
-          <FlowConnector />
-          <FlowStep n={3} accent="ink" title="Gemeente ondertekent antwoord" />
-        </ol>
-
-        {/* CTAs */}
-        <nav style={{ display: "flex", flexDirection: "column", gap: 12, width: "100%", maxWidth: 320 }}>
-          <Link
-            href="/gemeente"
-            style={{
-              display: "block",
-              padding: "16px 24px",
-              borderRadius: "var(--radius-md)",
-              background: "var(--moss-500)",
-              color: "var(--paper-50)",
-              fontFamily: "var(--font-sans)",
-              fontSize: 15,
-              fontWeight: 500,
-              textDecoration: "none",
-              textAlign: "center",
-              boxShadow: "var(--shadow-sm)",
-              transition: `background var(--dur-fast) var(--ease-out)`,
-            }}
-          >
-            Voor de gemeente
-          </Link>
-          <Link
+          <AudienceCard
             href="/burger"
-            style={{
-              display: "block",
-              padding: "16px 24px",
-              borderRadius: "var(--radius-md)",
-              background: "var(--paper-0)",
-              color: "var(--ink-900)",
-              fontFamily: "var(--font-sans)",
-              fontSize: 15,
-              fontWeight: 500,
-              textDecoration: "none",
-              textAlign: "center",
-              boxShadow: "var(--shadow-sm), var(--shadow-hairline)",
-              transition: `box-shadow var(--dur-fast) var(--ease-out)`,
-            }}
-          >
-            Voor bewoners
-          </Link>
-        </nav>
+            accent="clay"
+            eyebrow="Bewoner"
+            title="Schrijf één keer. Krijg een onderbouwd antwoord terug."
+            bullets={[
+              "Plan in B1-Nederlands uitgelegd voor jouw adres",
+              "Stel zoveel vragen als je wilt — AI legt het uit",
+              "Volg jouw zorg tot het ondertekende verslag",
+            ]}
+          />
+          <AudienceCard
+            href="/gemeente"
+            accent="moss"
+            eyebrow="Gemeente"
+            title="Cluster honderden zorgen. Onderteken één verslag."
+            bullets={[
+              "50+ zorgen automatisch in 4 thema's",
+              "Verslag-concept binnen 30 sec, klaar voor controle",
+              "Eén klik publiceren — alle indieners krijgen automatisch antwoord",
+            ]}
+          />
+        </div>
       </div>
 
-      {/* Footer */}
-      <footer style={{
-        position: "absolute",
-        bottom: 24,
-        fontSize: 12,
-        color: "var(--fg-muted)",
-        textAlign: "center",
-      }}>
+      <footer
+        style={{
+          marginTop: 64,
+          fontSize: 12,
+          color: "var(--fg-muted)",
+          textAlign: "center",
+        }}
+      >
         Concept-demo. Geen persoonsgegevens worden opgeslagen.
       </footer>
     </main>
