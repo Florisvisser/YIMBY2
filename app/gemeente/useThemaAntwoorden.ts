@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useSyncExternalStore } from "react";
+import demoDefaults from "@/data/demo-thema-antwoorden.json";
 import type {
   ConcernCategory,
   ThemaAntwoord,
@@ -9,6 +10,8 @@ import type {
 
 const STORAGE_KEY = "samenspraak.gemeente.thema-antwoorden.v1";
 const UPDATE_EVENT = "samenspraak:thema-antwoorden-update";
+
+const DEMO_DEFAULTS = demoDefaults as ThemaAntwoordenMap;
 
 let cachedRaw: string | null = null;
 let cachedMap: ThemaAntwoordenMap = {};
@@ -29,7 +32,17 @@ function parseMap(raw: string | null): ThemaAntwoordenMap {
 
 function readMap(): ThemaAntwoordenMap {
   if (typeof window === "undefined") return {};
-  const raw = window.localStorage.getItem(STORAGE_KEY);
+  let raw = window.localStorage.getItem(STORAGE_KEY);
+  if (raw === null) {
+    try {
+      const seeded = JSON.stringify(DEMO_DEFAULTS);
+      window.localStorage.setItem(STORAGE_KEY, seeded);
+      raw = seeded;
+    } catch {
+      // localStorage write may fail (private mode, quota) — fall back to in-memory defaults
+      raw = JSON.stringify(DEMO_DEFAULTS);
+    }
+  }
   if (cacheInvalidated || raw !== cachedRaw) {
     cachedRaw = raw;
     cachedMap = parseMap(raw);
