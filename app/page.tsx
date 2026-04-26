@@ -49,13 +49,13 @@ const ACCENT_TONES: Record<CardAccent, AccentTone> = {
 function AudienceCard({
   href,
   accent,
-  eyebrow,
+  cta,
   title,
   bullets,
 }: {
   href: string;
   accent: CardAccent;
-  eyebrow: string;
+  cta: string;
   title: string;
   bullets: string[];
 }) {
@@ -88,18 +88,6 @@ function AudienceCard({
         textAlign: "left",
       }}
     >
-      <span
-        style={{
-          fontSize: 11,
-          fontWeight: 500,
-          textTransform: "uppercase",
-          letterSpacing: "0.14em",
-          color: tone.eyebrow,
-          fontFamily: "var(--font-mono)",
-        }}
-      >
-        {eyebrow}
-      </span>
       <h2
         style={{
           fontFamily: "var(--font-display)",
@@ -148,7 +136,7 @@ function AudienceCard({
       <span
         style={{
           marginTop: "auto",
-          fontSize: 13,
+          fontSize: 14,
           fontWeight: 500,
           color: tone.arrow,
           display: "inline-flex",
@@ -157,7 +145,7 @@ function AudienceCard({
           fontFamily: "var(--font-sans)",
         }}
       >
-        Open dit deel
+        {cta}
         <span
           aria-hidden="true"
           style={{
@@ -260,7 +248,7 @@ export default function HomePage() {
           <AudienceCard
             href="/burger"
             accent="clay"
-            eyebrow="Ik ben bewoner"
+            cta="Ik ben bewoner"
             title="Schrijf één keer. Krijg een onderbouwd antwoord terug."
             bullets={[
               "Plan in B1-Nederlands uitgelegd voor jouw adres",
@@ -271,7 +259,7 @@ export default function HomePage() {
           <AudienceCard
             href="/gemeente"
             accent="moss"
-            eyebrow="Ik ben van de gemeente"
+            cta="Ik ben van de gemeente"
             title="Cluster honderden zorgen. Onderteken één verslag."
             bullets={[
               "50+ zorgen automatisch in 4 thema's",
