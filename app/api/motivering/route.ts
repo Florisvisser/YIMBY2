@@ -79,7 +79,7 @@ export async function POST(request: Request) {
   }
 
   const concerns = await getConcerns();
-  const prompt = buildMotiveringPrompt(concerns);
+  const prompt = buildMotiveringPrompt(concerns, parsed.data.themaAntwoorden);
 
   const claudeReport = await tryClaude(prompt);
   if (claudeReport) {

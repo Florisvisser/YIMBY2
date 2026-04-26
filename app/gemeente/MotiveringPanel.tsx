@@ -55,7 +55,7 @@ type PublishState =
   | { status: "published"; reference: string; signedAt: string }
   | { status: "error"; error: string };
 
-function assembleReport(
+function assembleFallbackReport(
   concerns: Concern[],
   stats: CategoryStats[],
   antwoorden: ThemaAntwoordenMap,
@@ -105,6 +105,84 @@ function assembleReport(
   };
 }
 
+function ReportSkeleton() {
+  return (
+    <div
+      style={{
+        background: "var(--paper-0)",
+        borderRadius: "var(--radius-xl)",
+        padding: 28,
+        boxShadow: "var(--shadow-md), var(--shadow-hairline)",
+        display: "flex",
+        flexDirection: "column",
+        gap: 20,
+      }}
+    >
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <ShimmerBar width="40%" height={10} />
+        <ShimmerBar width="70%" height={28} />
+        <ShimmerBar width="55%" height={12} />
+      </div>
+      <ShimmerBar width="100%" height={48} />
+      {[0, 1, 2, 3].map((i) => (
+        <div
+          key={i}
+          style={{
+            background: "var(--paper-50)",
+            borderRadius: "var(--radius-lg)",
+            padding: 20,
+            display: "flex",
+            flexDirection: "column",
+            gap: 10,
+          }}
+        >
+          <ShimmerBar width="45%" height={16} />
+          <ShimmerBar width="100%" height={56} />
+          <ShimmerBar width="100%" height={56} />
+          <ShimmerBar width="80%" height={36} />
+        </div>
+      ))}
+      <p
+        style={{
+          margin: 0,
+          fontSize: 12,
+          color: "var(--fg-muted)",
+          fontStyle: "italic",
+          textAlign: "center",
+        }}
+      >
+        Verslag wordt samengesteld — Claude analyseert de zienswijzen…
+      </p>
+    </div>
+  );
+}
+
+function ShimmerBar({ width, height }: { width: string; height: number }) {
+  return (
+    <div
+      style={{
+        width,
+        height,
+        borderRadius: "var(--radius-sm)",
+        background: "var(--paper-100)",
+        overflow: "hidden",
+        position: "relative",
+      }}
+    >
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          backgroundImage:
+            "linear-gradient(90deg, transparent 0%, var(--paper-0) 50%, transparent 100%)",
+          backgroundSize: "200% 100%",
+          animation: "shimmer 1.4s infinite",
+        }}
+      />
+    </div>
+  );
+}
+
 export default function MotiveringPanel({
   concerns,
   stats,
@@ -119,6 +197,8 @@ export default function MotiveringPanel({
   const [error, setError] = useState<string | null>(null);
   const [signModalOpen, setSignModalOpen] = useState(false);
   const [publishState, setPublishState] = useState<PublishState>({ status: "idle" });
+  const [editing, setEditing] = useState(false);
+  const [originalReport, setOriginalReport] = useState<MotiveringReport | null>(null);
   const requestInFlight = useRef(false);
   const publishInFlight = useRef(false);
 
@@ -177,27 +257,93 @@ export default function MotiveringPanel({
   );
   const allFilled = missingThemas.length === 0;
 
-  const handleClick = () => {
+  const handleClick = async () => {
     if (requestInFlight.current || !allFilled) return;
     requestInFlight.current = true;
+    setReport(null);
     setLoading(true);
     setError(null);
+    setEditing(false);
+
+    const themaAntwoorden = CONCERN_CATEGORIES.map((cat) => ({
+      category: cat,
+      antwoord: (antwoorden[cat]?.antwoord ?? "").trim(),
+      planwijziging: (antwoorden[cat]?.planwijziging ?? "").trim(),
+    })).filter((a) => a.antwoord.length > 0 || a.planwijziging.length > 0);
+
     try {
-      const assembled = assembleReport(concerns, stats, antwoorden);
-      setReport(assembled);
+      const res = await fetch("/api/motivering", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          projectId: "schapenweide",
+          themaAntwoorden,
+        }),
+      });
+      if (!res.ok) throw new Error(`motivering ${res.status}`);
+      const data = (await res.json()) as MotiveringReport;
+      setReport(data);
     } catch (err) {
-      console.warn("[MotiveringPanel] assembleReport faalde:", err);
-      setError("Verslag kon niet worden samengesteld.");
+      console.warn("[MotiveringPanel] Claude-call faalde, fallback ingezet:", err);
+      try {
+        const assembled = assembleFallbackReport(concerns, stats, antwoorden);
+        setReport(assembled);
+      } catch (fallbackErr) {
+        console.warn("[MotiveringPanel] Fallback assemble faalde:", fallbackErr);
+        setError("Verslag kon niet worden samengesteld.");
+      }
     } finally {
       setLoading(false);
       requestInFlight.current = false;
     }
   };
 
+  function handleRegenerate() {
+    setReport(null);
+    setError(null);
+    setEditing(false);
+    setPublishState({ status: "idle" });
+    void handleClick();
+  }
+
+  function startEditing() {
+    if (!report || publishState.status === "published") return;
+    setOriginalReport(report);
+    setEditing(true);
+  }
+
+  function cancelEditing() {
+    if (originalReport) setReport(originalReport);
+    setEditing(false);
+    setOriginalReport(null);
+  }
+
+  function saveEditing() {
+    setEditing(false);
+    setOriginalReport(null);
+  }
+
+  function updateSection(
+    index: number,
+    field: "officialMotivation" | "residentExplanation" | "suggestedPlanAdjustment",
+    value: string,
+  ) {
+    setReport((prev) => {
+      if (!prev) return prev;
+      const sections = prev.sections.map((s, i) =>
+        i === index ? { ...s, [field]: value } : s,
+      );
+      return { ...prev, sections };
+    });
+  }
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+      {/* Loading skeleton */}
+      {loading && !report && <ReportSkeleton />}
+
       {/* Generate panel */}
-      {!report && (
+      {!report && !loading && (
         <div style={{
           background: "var(--paper-0)",
           borderRadius: "var(--radius-xl)",
@@ -384,7 +530,7 @@ export default function MotiveringPanel({
 
           {/* Sections */}
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            {report.sections.map((section) => (
+            {report.sections.map((section, sectionIndex) => (
               <div key={section.category} style={{
                 background: "var(--paper-50)",
                 borderRadius: "var(--radius-lg)",
@@ -406,40 +552,67 @@ export default function MotiveringPanel({
                 {/* Ambtelijke motivering */}
                 <div style={{ display: "flex", gap: 12 }}>
                   <div style={{ width: 3, background: "var(--ink-900)", borderRadius: 2, flexShrink: 0 }} />
-                  <div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 10, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.12em", color: "var(--ink-600)", marginBottom: 6 }}>
                       Ambtelijke motivering
                     </div>
-                    <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6, color: "var(--fg-secondary)" }}>
-                      {section.officialMotivation}
-                    </p>
+                    {editing ? (
+                      <textarea
+                        value={section.officialMotivation}
+                        onChange={(e) => updateSection(sectionIndex, "officialMotivation", e.target.value)}
+                        rows={5}
+                        style={editTextareaStyle}
+                      />
+                    ) : (
+                      <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6, color: "var(--fg-secondary)" }}>
+                        {section.officialMotivation}
+                      </p>
+                    )}
                   </div>
                 </div>
 
                 {/* Bewoners uitleg */}
                 <div style={{ display: "flex", gap: 12 }}>
                   <div style={{ width: 3, background: "var(--clay-400)", borderRadius: 2, flexShrink: 0 }} />
-                  <div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 10, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.12em", color: "var(--clay-500)", marginBottom: 6 }}>
                       Uitleg voor bewoners
                     </div>
-                    <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6, color: "var(--fg-secondary)" }}>
-                      {section.residentExplanation}
-                    </p>
+                    {editing ? (
+                      <textarea
+                        value={section.residentExplanation}
+                        onChange={(e) => updateSection(sectionIndex, "residentExplanation", e.target.value)}
+                        rows={5}
+                        style={editTextareaStyle}
+                      />
+                    ) : (
+                      <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6, color: "var(--fg-secondary)" }}>
+                        {section.residentExplanation}
+                      </p>
+                    )}
                   </div>
                 </div>
 
                 {/* Voorgestelde aanpassing */}
-                {section.suggestedPlanAdjustment && (
+                {(section.suggestedPlanAdjustment || editing) && (
                   <div style={{ display: "flex", gap: 12 }}>
                     <div style={{ width: 3, background: "var(--sky-400)", borderRadius: 2, flexShrink: 0 }} />
-                    <div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 10, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.12em", color: "var(--sky-500)", marginBottom: 6 }}>
                         Voorgestelde aanpassing
                       </div>
-                      <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6, color: "var(--fg-secondary)" }}>
-                        {section.suggestedPlanAdjustment}
-                      </p>
+                      {editing ? (
+                        <textarea
+                          value={section.suggestedPlanAdjustment}
+                          onChange={(e) => updateSection(sectionIndex, "suggestedPlanAdjustment", e.target.value)}
+                          rows={3}
+                          style={editTextareaStyle}
+                        />
+                      ) : (
+                        <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6, color: "var(--fg-secondary)" }}>
+                          {section.suggestedPlanAdjustment}
+                        </p>
+                      )}
                     </div>
                   </div>
                 )}
@@ -479,7 +652,49 @@ export default function MotiveringPanel({
           {/* Action buttons */}
           <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 4 }}>
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-            {publishState.status === "published" ? (
+            {editing ? (
+              <>
+                <button
+                  type="button"
+                  onClick={saveEditing}
+                  style={{
+                    padding: "12px 20px",
+                    borderRadius: "var(--radius-md)",
+                    background: "var(--moss-500)",
+                    color: "var(--paper-50)",
+                    border: "none",
+                    fontFamily: "var(--font-sans)",
+                    fontSize: 14,
+                    fontWeight: 500,
+                    cursor: "pointer",
+                    boxShadow: "var(--shadow-sm)",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 8,
+                  }}
+                >
+                  <CheckIcon />
+                  Opslaan
+                </button>
+                <button
+                  type="button"
+                  onClick={cancelEditing}
+                  style={{
+                    padding: "12px 20px",
+                    borderRadius: "var(--radius-md)",
+                    background: "transparent",
+                    color: "var(--fg-secondary)",
+                    border: "none",
+                    cursor: "pointer",
+                    fontFamily: "var(--font-sans)",
+                    fontSize: 14,
+                    fontWeight: 500,
+                  }}
+                >
+                  Annuleer
+                </button>
+              </>
+            ) : publishState.status === "published" ? (
               <span
                 style={{
                   padding: "12px 20px",
@@ -506,61 +721,70 @@ export default function MotiveringPanel({
                 </span>
               </span>
             ) : (
-              <button
-                type="button"
-                onClick={openSignModal}
-                disabled={publishState.status === "publishing"}
-                style={{
-                  padding: "12px 20px",
-                  borderRadius: "var(--radius-md)",
-                  background: "var(--moss-500)",
-                  color: "var(--paper-50)",
-                  border: "none",
-                  fontFamily: "var(--font-sans)",
-                  fontSize: 14,
-                  fontWeight: 500,
-                  cursor: publishState.status === "publishing" ? "wait" : "pointer",
-                  boxShadow: "var(--shadow-sm)",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 8,
-                  opacity: publishState.status === "publishing" ? 0.7 : 1,
-                }}
-              >
-                <CheckIcon />
-                Onderteken &amp; publiceer
-              </button>
+              <>
+                <button
+                  type="button"
+                  onClick={openSignModal}
+                  disabled={publishState.status === "publishing"}
+                  style={{
+                    padding: "12px 20px",
+                    borderRadius: "var(--radius-md)",
+                    background: "var(--moss-500)",
+                    color: "var(--paper-50)",
+                    border: "none",
+                    fontFamily: "var(--font-sans)",
+                    fontSize: 14,
+                    fontWeight: 500,
+                    cursor: publishState.status === "publishing" ? "wait" : "pointer",
+                    boxShadow: "var(--shadow-sm)",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 8,
+                    opacity: publishState.status === "publishing" ? 0.7 : 1,
+                  }}
+                >
+                  <CheckIcon />
+                  Onderteken &amp; publiceer
+                </button>
+                <button
+                  type="button"
+                  onClick={startEditing}
+                  style={{
+                    padding: "12px 20px",
+                    borderRadius: "var(--radius-md)",
+                    background: "var(--paper-0)",
+                    color: "var(--ink-900)",
+                    border: "none",
+                    fontFamily: "var(--font-sans)",
+                    fontSize: 14,
+                    fontWeight: 500,
+                    cursor: "pointer",
+                    boxShadow: "var(--shadow-sm), var(--shadow-hairline)",
+                  }}
+                >
+                  Bewerken
+                </button>
+                <button
+                  type="button"
+                  onClick={handleRegenerate}
+                  disabled={loading}
+                  style={{
+                    padding: "12px 20px",
+                    borderRadius: "var(--radius-md)",
+                    background: "transparent",
+                    color: "var(--fg-secondary)",
+                    border: "none",
+                    cursor: loading ? "wait" : "pointer",
+                    fontFamily: "var(--font-sans)",
+                    fontSize: 14,
+                    fontWeight: 500,
+                    opacity: loading ? 0.5 : 1,
+                  }}
+                >
+                  Opnieuw genereren
+                </button>
+              </>
             )}
-            <button style={{
-              padding: "12px 20px",
-              borderRadius: "var(--radius-md)",
-              background: "var(--paper-0)",
-              color: "var(--ink-900)",
-              border: "none",
-              fontFamily: "var(--font-sans)",
-              fontSize: 14,
-              fontWeight: 500,
-              cursor: "pointer",
-              boxShadow: "var(--shadow-sm), var(--shadow-hairline)",
-            }}>
-              Bewerken
-            </button>
-            <button
-              onClick={() => { setReport(null); setError(null); setPublishState({ status: "idle" }); }}
-              style={{
-                padding: "12px 20px",
-                borderRadius: "var(--radius-md)",
-                background: "transparent",
-                color: "var(--fg-secondary)",
-                border: "none",
-                cursor: "pointer",
-                fontFamily: "var(--font-sans)",
-                fontSize: 14,
-                fontWeight: 500,
-              }}
-            >
-              Opnieuw genereren
-            </button>
             </div>
             {publishState.status === "error" && (
               <div style={{
@@ -716,3 +940,18 @@ export default function MotiveringPanel({
     </div>
   );
 }
+
+const editTextareaStyle: React.CSSProperties = {
+  width: "100%",
+  padding: "10px 12px",
+  fontSize: 14,
+  fontFamily: "var(--font-sans)",
+  lineHeight: 1.55,
+  borderRadius: "var(--radius-sm)",
+  border: "1px solid var(--border-medium)",
+  background: "var(--paper-0)",
+  color: "var(--ink-900)",
+  outline: "none",
+  boxSizing: "border-box",
+  resize: "vertical",
+};

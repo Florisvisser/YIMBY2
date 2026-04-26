@@ -20,9 +20,22 @@ export const MotiveringReportSchema = z.object({
   sections: z.array(MotiveringSectionSchema).length(4),
 });
 
+export const ThemaAntwoordInputSchema = z.object({
+  category: z.enum([
+    "traffic_parking",
+    "building_height",
+    "green_nature",
+    "noise_livability",
+  ]),
+  antwoord: z.string().max(4000),
+  planwijziging: z.string().max(4000),
+});
+
 export const MotiveringRequestSchema = z.object({
   projectId: z.literal("schapenweide"),
+  themaAntwoorden: z.array(ThemaAntwoordInputSchema).max(4).optional(),
   forceFallback: z.boolean().optional(),
 });
 
 export type ParsedMotiveringReport = z.infer<typeof MotiveringReportSchema>;
+export type ThemaAntwoordInput = z.infer<typeof ThemaAntwoordInputSchema>;
