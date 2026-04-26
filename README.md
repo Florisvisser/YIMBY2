@@ -1,75 +1,123 @@
 # Samenspraak
 
-Burgerparticipatie als bewijsbare feedback-loop, niet als juridisch vinkje.
+Burgerparticipatie die voor bewoners werkt — én bewijsbaar landt bij de gemeente.
 
-Hackathon-demo voor het Schapenweide-project (Bilthoven). De app laat zien hoe burgerzorgen geclusterd worden tot een ambtelijk concept-participatieverslag (motivering), en geeft burgers daarop terug-zicht.
+[→ samenspraak.vercel.app](https://samenspraak.vercel.app)
 
-## Demo loop
+Samenspraak is een open-source participatieplatform voor Nederlandse omgevingsvragen. Bewoners schrijven in begrijpelijke taal hun zorgen over een bouwplan in hun buurt. Een AI-laag clustert vergelijkbare zorgen, helpt de gemeente met onderbouwde antwoorden, en geeft elke indiener een ondertekend antwoord terug — geen formulier dat verdwijnt in een lade.
+
+De live-versie draait rond het **Schapenweide-bouwplan** in Bilthoven (gemeente De Bilt) — 450 woningen plus 25.000 m² life science op een terrein van 12 hectare.
+
+## Hoe het werkt
 
 ```
-Burger dient zorg in (/burger)
-  → gemeente ziet geclusterd dashboard (/gemeente)
-  → "Genereer verslag" produceert concept-motivering (Claude)
-  → gemeente ondertekent & publiceert (verslag → Supabase, alle concerns → "Beantwoord")
-  → burger ziet B1-uitleg per categorie in eigen portal (/burger/mijn-zorgen)
+Bewoner schrijft zorg op /burger
+  → AI legt het plan uit voor het exacte adres (afstand + windrichting)
+  → Onbeperkt vragen aan de chat (gevoed met het officiële Ontwikkelperspectief)
+  → Zienswijze ingediend met thema + ernst
+  → Gemeente ziet de zorg op /gemeente met een AI-conceptantwoord erbij
+  → Gemeente bewerkt + ondertekent + verstuurt
+  → Bewoner ziet het persoonlijke antwoord op /burger/mijn-zorgen
+  → De vier thema-antwoorden samen worden ook als ondertekend verslag gepubliceerd
 ```
+
+## Functies
+
+**Voor bewoners**
+- Plan uitgelegd in B1-Nederlands voor jouw exacte adres
+- Onbeperkt vragen stellen aan een chat die het officiële Ontwikkelperspectief kent
+- Spraak-naar-tekst voor wie liever inspreekt
+- Volg jouw zorg tot het ondertekende antwoord
+- Inzicht in eerder gepubliceerde verslagen en officiële stukken
+
+**Voor gemeentes**
+- Honderden zorgen automatisch geclusterd in vier thema's
+- Per zorg een AI-conceptantwoord op basis van de planfeiten
+- Bewerken + ondertekenen + versturen in één flow
+- Concept-eindverslag binnen 30 seconden, klaar voor controle
+- Eén klik publiceren — alle indieners krijgen automatisch antwoord
 
 ## Lokaal draaien
 
 ```bash
 npm install
-cp .env.example .env.local   # vul env vars in (zie hieronder)
+cp .env.example .env.local   # vul environment variables in (zie hieronder)
 npm run dev
 ```
 
 Open http://localhost:3000.
 
-Env vars (zie `.env.example`):
+### Environment variables
 
-- `ANTHROPIC_API_KEY` — optioneel. Zonder werkt de app op een deterministische JSON-fallback (zelfde shape als Claude output). Met key: één Claude-call (Sonnet 4.6) genereert een 4-secties motivering.
-- `NEXT_PUBLIC_SUPABASE_URL` + `SUPABASE_ANON_KEY` — optioneel. Zonder werkt `/gemeente` met enkel de 50 seeded zienswijzen; `/burger` POST faalt netjes met een melding. Met keys: nieuwe burger-inzendingen worden persistent opgeslagen en verschijnen na refresh op `/gemeente`.
+| Variable | Verplicht? | Functie |
+|---|---|---|
+| `ANTHROPIC_API_KEY` | Aanbevolen | Voedt plan-uitleg, chat, AI-conceptantwoorden en het concept-verslag. Zonder key werkt de app op statische voorbeelddata met dezelfde structuur, zodat je de UI lokaal kunt verkennen. |
+| `NEXT_PUBLIC_SUPABASE_URL` + `SUPABASE_ANON_KEY` | Aanbevolen | Persistent opslaan van zienswijzen en gepubliceerde verslagen. Zonder Supabase toont `/gemeente` alleen de 50 voorbeeld-zienswijzen. |
+| `REASON8_API_KEY` | Optioneel | Schakelt de microfoon-knop in voor spraak-naar-tekst via Reson8. Typen werkt altijd. |
 
-## Routes
-
-| Route | Doel |
-|---|---|
-| `/` | Landing |
-| `/gemeente` | Dashboard voor de ambtenaar (Marieke) — Phase 1 + status-mutatie Phase 3 |
-| `/burger` | Burger-flow (Achmed) — 3-stappen wizard, Phase 2 |
-| `/burger/mijn-zorgen` | Eigen inzendingen + status, gebaseerd op localStorage IDs, Phase 3 |
-| `/api/seeded-concerns` | `GET` alle 50 seeded concerns |
-| `/api/motivering` | `POST` één Claude-call → concept verslag |
-| `/api/concerns` | `POST` zienswijze → Supabase, Phase 2 |
-| `/api/concerns/[id]` | `PATCH` status (new \| in_review \| answered), Phase 3 |
-| `/api/concerns/mine` | `POST` `{ids}` → eigen zienswijzen verrijkt met `verslagAnswer` per categorie, Phase 3/4 |
-| `/api/pdok` | `GET` proxy naar PDOK Locatieserver, Phase 2 |
-| `/api/reports/publish` | `POST` ondertekend verslag → Supabase + bulk-flip concerns naar `answered`, Phase 4 |
-
-## Scripts
+### Scripts
 
 ```bash
 npm run dev       # lokaal draaien
 npm run lint      # eslint
-npm run build     # productie build (draai dit voor je commit)
+npm run build     # productie build
 ```
 
-## Stack
+## Routes
 
-- Next.js 16 (App Router) — let op: dit is **niet** Next.js 13/14, conventies wijken af. Lees `node_modules/next/dist/docs/` voor je code wijzigt.
-- React 19, TypeScript strict, Tailwind v4
-- `@anthropic-ai/sdk` voor de Claude-call
-- `zod` voor schema-validatie van Claude output
+### Pagina's
+
+| Route | Doel |
+|---|---|
+| `/` | Landing met persona-keuze (bewoner / gemeente) |
+| `/gemeente` | Dashboard voor de gemeente — thema's, recente zienswijzen, verslag-publicatie |
+| `/burger` | Bewoners-flow — adresinvoer, plan-uitleg, chat, zienswijze indienen |
+| `/burger/mijn-zorgen` | Eigen ingediende zienswijzen + ondertekende antwoorden |
+
+### API
+
+| Route | Methode | Doel |
+|---|---|---|
+| `/api/concerns` | `POST` | Zienswijze opslaan + AI-antwoordsuggestie triggeren |
+| `/api/concerns/[id]` | `PATCH` | Status muteren (`new` / `in_review` / `answered`) |
+| `/api/concerns/[id]/answer` | `POST` | Gemeente ondertekent + verstuurt antwoord op één zorg |
+| `/api/concerns/[id]/suggest-answer` | `POST` | Handmatig AI-suggestie regenereren |
+| `/api/concerns/mine` | `POST` | Eigen zienswijzen, verrijkt met antwoord |
+| `/api/concerns/suggest` | `POST` | AI-antwoordsuggestie op cluster-niveau |
+| `/api/motivering` | `POST` | Concept-participatieverslag genereren (4 secties) |
+| `/api/plan-uitleg` | `POST` | Plan-uitleg op maat van het adres (afstand, windrichting) |
+| `/api/vraag` | `POST` | Chat-antwoord op een vraag over het plan |
+| `/api/thema-analyse` | `POST` | AI-pijnpuntenanalyse per thema |
+| `/api/reports/publish` | `POST` | Verslag ondertekenen en publiceren |
+| `/api/reson8` | `POST` | Spraak-naar-tekst proxy (audio-blob → transcript) |
+| `/api/pdok` · `/api/pdok-suggest` · `/api/pdok-lookup` | `GET` | PDOK Locatieserver-proxy voor adresresolutie |
+| `/api/seeded-concerns` | `GET` | Voorbeeld-zienswijzen (read-only) |
+
+## Architectuur
+
+- **Next.js 16** (App Router) · **React 19** · **TypeScript strict** · **Tailwind v4**
+- **Anthropic Claude** (Sonnet 4.6) — één call per workflow, output gevalideerd met `zod`, met statische voorbeelddata als netwerk-vangnet zodat de UI altijd blijft werken
+- **Supabase** (Postgres + RLS) voor persistentie
+- **PDOK Locatieserver** voor adres-autocomplete
+- **Leaflet** voor de plan-locatiekaart
+- **Reson8** voor spraak-naar-tekst (optioneel)
+
+Alle plan-feiten (parkeernormen, bouwhoogtes, ecologie, geluid, programma) zijn uit de officiële PDF geëxtraheerd naar `data/plan-knowledge.json` en functioneren als single source of truth voor zowel de chat, de plan-uitleg als de gemeente-verslagen.
+
+## Bron-data
+
+> **Ontwikkelperspectief Schapenweide** — gemeente De Bilt, 29 februari 2024
+> [Officiële PDF](https://www.debilt.nl/fileadmin/bestanden/Over_De_Bilt/Projecten/Schapenweide/Ontwikkelperspectief_Schapenweide.pdf)
+
+Geen persoonsgegevens worden opgeslagen — alleen postcode, wijk, een straatreferentie, de gekozen categorie en de tekst van de zienswijze.
 
 ## Deploy
 
-Vercel. Set deze drie environment variables (Production + Preview):
+Vercel. Set deze environment variables (Production + Preview):
 
 - `ANTHROPIC_API_KEY`
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `SUPABASE_ANON_KEY` (publishable / anon key — server-only, niet in client bundle)
+- `REASON8_API_KEY` (optioneel)
 
-Supabase-tabel + RLS staan in `supabase/migrations/`. Toepassen via Supabase Studio SQL editor of CLI.
-
-## Build-plan
-
-Volledige hackathon-strategie staat in `samenspraak_hackathon_build_test_plan.md`. Werkverdeling en best-practices voor AI-pair-coding staan in `AGENTS.md`.
+Supabase-tabellen + RLS-policies staan in `supabase/migrations/`. Toepassen via Supabase Studio SQL editor of CLI.
