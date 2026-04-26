@@ -3,6 +3,12 @@
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { CATEGORY_LABEL_NL, type PlanUitlegReport, type ConcernCategory } from "@/lib/data/types";
+import {
+  SCHAPENWEIDE_LAT,
+  SCHAPENWEIDE_LON,
+  haversineKm,
+  bearingLabel,
+} from "@/lib/geo/schapenweide";
 import { Eyebrow, Lead } from "../ui";
 
 const PlanLocatieMap = dynamic(() => import("./PlanLocatieMap"), { ssr: false });
@@ -80,33 +86,6 @@ function ChevronIcon({ down }: { down: boolean }) {
       <polyline points="6 9 12 15 18 9" />
     </svg>
   );
-}
-
-const SCHAPENWEIDE_LAT = 52.126;
-const SCHAPENWEIDE_LON = 5.195;
-
-function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
-  const R = 6371;
-  const toRad = (x: number) => (x * Math.PI) / 180;
-  const dLat = toRad(lat2 - lat1);
-  const dLon = toRad(lon2 - lon1);
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
-  return 2 * R * Math.asin(Math.sqrt(a));
-}
-
-function bearingLabel(lat1: number, lon1: number, lat2: number, lon2: number): string {
-  const toRad = (x: number) => (x * Math.PI) / 180;
-  const toDeg = (x: number) => (x * 180) / Math.PI;
-  const dLon = toRad(lon2 - lon1);
-  const y = Math.sin(dLon) * Math.cos(toRad(lat2));
-  const x =
-    Math.cos(toRad(lat1)) * Math.sin(toRad(lat2)) -
-    Math.sin(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.cos(dLon);
-  const brng = (toDeg(Math.atan2(y, x)) + 360) % 360;
-  const dirs = ["noord", "noord-oost", "oost", "zuid-oost", "zuid", "zuid-west", "west", "noord-west"];
-  return dirs[Math.round(brng / 45) % 8];
 }
 
 export default function PlanUitlegStep({
@@ -509,6 +488,21 @@ function OmgevingsvisieFigure() {
   const [tab, setTab] = useState<"plankaart" | "luchtfoto" | "randvoorwaardenkaart">(
     "plankaart",
   );
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+
+  useEffect(() => {
+    if (!lightboxOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setLightboxOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [lightboxOpen]);
   const sources: Record<typeof tab, { src: string; alt: string; caption: string; label: string }> = {
     plankaart: {
       src: "/schapenweide/plankaart-toekomstige-situatie.jpg",
@@ -568,18 +562,33 @@ function OmgevingsvisieFigure() {
           </button>
         ))}
       </div>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={active.src}
-        alt={active.alt}
+      <button
+        type="button"
+        onClick={() => setLightboxOpen(true)}
+        aria-label="Vergroot afbeelding"
         style={{
-          width: "100%",
-          height: "auto",
-          borderRadius: "var(--radius-lg)",
-          boxShadow: "var(--shadow-sm)",
           display: "block",
+          width: "100%",
+          padding: 0,
+          border: "none",
+          background: "transparent",
+          cursor: "zoom-in",
+          borderRadius: "var(--radius-lg)",
         }}
-      />
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={active.src}
+          alt={active.alt}
+          style={{
+            width: "100%",
+            height: "auto",
+            borderRadius: "var(--radius-lg)",
+            boxShadow: "var(--shadow-sm)",
+            display: "block",
+          }}
+        />
+      </button>
       <p style={{ fontSize: 11, color: "var(--fg-muted)", margin: "8px 0 4px 0" }}>
         {active.caption}
       </p>
@@ -591,6 +600,69 @@ function OmgevingsvisieFigure() {
       >
         Bron: Ontwikkelperspectief Schapenweide · Gemeente De Bilt (PDF)
       </a>
+      {lightboxOpen && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={active.alt}
+          onClick={() => setLightboxOpen(false)}
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(26, 22, 18, 0.88)",
+            zIndex: 1000,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 24,
+            cursor: "zoom-out",
+          }}
+        >
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setLightboxOpen(false);
+            }}
+            aria-label="Sluit afbeelding"
+            style={{
+              position: "absolute",
+              top: 16,
+              right: 16,
+              width: 40,
+              height: 40,
+              borderRadius: "50%",
+              background: "var(--paper-0)",
+              color: "var(--ink-900)",
+              border: "none",
+              fontSize: 20,
+              fontWeight: 500,
+              cursor: "pointer",
+              boxShadow: "var(--shadow-md)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              lineHeight: 1,
+            }}
+          >
+            ×
+          </button>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={active.src}
+            alt={active.alt}
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              maxWidth: "90vw",
+              maxHeight: "90vh",
+              objectFit: "contain",
+              borderRadius: "var(--radius-md)",
+              boxShadow: "var(--shadow-lg)",
+              cursor: "default",
+            }}
+          />
+        </div>
+      )}
     </div>
   );
 }

@@ -9,7 +9,6 @@ import {
 } from "@/lib/data/types";
 import { PrimaryBtn } from "../ui";
 
-const MAX_TURNS = 5;
 const MIN_TEXT = 10;
 const MAX_TEXT = 1500;
 
@@ -156,9 +155,6 @@ export default function VraagZorgStep({
   const [expandedCategory, setExpandedCategory] = useState<ConcernCategory | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  const userTurns = history.filter((m) => m.role === "user").length;
-  const maxReached = userTurns >= MAX_TURNS;
-
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 700px)");
     const update = () => setNarrow(mq.matches);
@@ -173,7 +169,7 @@ export default function VraagZorgStep({
 
   async function handleSend() {
     const q = input.trim();
-    if (!q || sendInFlight || maxReached) return;
+    if (!q || sendInFlight) return;
     setInput("");
     await onSend(q);
   }
@@ -213,7 +209,7 @@ export default function VraagZorgStep({
           Stel je vraag
         </h2>
         <p style={{ fontSize: 14, color: "var(--fg-secondary)", margin: "0 0 16px 0" }}>
-          Stel maximaal {MAX_TURNS} vragen over het Schapenweide-plan.
+          Stel je vragen over het Schapenweide-plan — zoveel als je wilt.
         </p>
 
         {profile && (
@@ -295,62 +291,52 @@ export default function VraagZorgStep({
           <div ref={bottomRef} />
         </div>
 
-        {maxReached ? (
-          <p style={{ fontSize: 13, color: "var(--fg-muted)", marginBottom: 12, fontStyle: "italic" }}>
-            Maximaal aantal vragen bereikt.
-          </p>
-        ) : (
-          <div style={{ display: "flex", gap: 8, marginBottom: 12, alignItems: "flex-end" }}>
-            <textarea
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              rows={2}
-              placeholder="Stel een vraag… (Enter om te verzenden)"
-              disabled={sendInFlight}
-              style={{
-                flex: 1,
-                padding: "10px 12px",
-                borderRadius: "var(--radius-md)",
-                border: "1px solid var(--border-medium)",
-                background: "var(--paper-0)",
-                fontFamily: "var(--font-sans)",
-                fontSize: 14,
-                lineHeight: 1.4,
-                color: "var(--ink-900)",
-                outline: "none",
-                resize: "none",
-                boxSizing: "border-box",
-              }}
-            />
-            <button
-              type="button"
-              onClick={handleSend}
-              disabled={!input.trim() || sendInFlight}
-              style={{
-                padding: "10px 14px",
-                borderRadius: "var(--radius-md)",
-                background: !input.trim() || sendInFlight ? "var(--paper-100)" : "var(--moss-500)",
-                color: !input.trim() || sendInFlight ? "var(--ink-300)" : "var(--paper-50)",
-                border: "none",
-                cursor: !input.trim() || sendInFlight ? "not-allowed" : "pointer",
-                fontFamily: "var(--font-sans)",
-                fontSize: 14,
-                fontWeight: 500,
-                flexShrink: 0,
-                alignSelf: "stretch",
-                display: "flex",
-                alignItems: "center",
-              }}
-            >
-              Stuur
-            </button>
-          </div>
-        )}
-
-        <p style={{ fontSize: 12, color: "var(--fg-muted)", marginBottom: 16 }}>
-          {userTurns} / {MAX_TURNS} vragen gesteld
-        </p>
+        <div style={{ display: "flex", gap: 8, marginBottom: 16, alignItems: "flex-end" }}>
+          <textarea
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            rows={2}
+            placeholder="Stel een vraag… (Enter om te verzenden)"
+            disabled={sendInFlight}
+            style={{
+              flex: 1,
+              padding: "10px 12px",
+              borderRadius: "var(--radius-md)",
+              border: "1px solid var(--border-medium)",
+              background: "var(--paper-0)",
+              fontFamily: "var(--font-sans)",
+              fontSize: 14,
+              lineHeight: 1.4,
+              color: "var(--ink-900)",
+              outline: "none",
+              resize: "none",
+              boxSizing: "border-box",
+            }}
+          />
+          <button
+            type="button"
+            onClick={handleSend}
+            disabled={!input.trim() || sendInFlight}
+            style={{
+              padding: "10px 14px",
+              borderRadius: "var(--radius-md)",
+              background: !input.trim() || sendInFlight ? "var(--paper-100)" : "var(--moss-500)",
+              color: !input.trim() || sendInFlight ? "var(--ink-300)" : "var(--paper-50)",
+              border: "none",
+              cursor: !input.trim() || sendInFlight ? "not-allowed" : "pointer",
+              fontFamily: "var(--font-sans)",
+              fontSize: 14,
+              fontWeight: 500,
+              flexShrink: 0,
+              alignSelf: "stretch",
+              display: "flex",
+              alignItems: "center",
+            }}
+          >
+            Stuur
+          </button>
+        </div>
 
         <button
           type="button"
@@ -404,7 +390,7 @@ export default function VraagZorgStep({
         {/* Category cards */}
         <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 20 }}>
           <span style={{ fontSize: 13, fontWeight: 500, color: "var(--fg-secondary)", marginBottom: 4 }}>
-            Welk thema raakt jou het meest?
+            Over welk thema wil je je zorg uiten?
           </span>
           {CATEGORY_OPTIONS.map((opt) => {
             const sel = category === opt;

@@ -296,7 +296,7 @@ export default function BurgerForm() {
         const data = (await res.json()) as { transcript?: string; error?: string };
         if (!res.ok || !data.transcript) {
           setVoiceError(
-            data.error ?? "Transcriptie mislukt. Probeer opnieuw of typ je zorg."
+            "Inspreken werkt nu even niet — typ je zorg gerust hieronder, dat werkt net zo goed."
           );
         } else {
           setConcernText((prev) => {
@@ -308,7 +308,7 @@ export default function BurgerForm() {
         }
       } catch {
         setVoiceError(
-          "Transcriptie niet beschikbaar. Probeer opnieuw of typ je zorg."
+          "Inspreken werkt nu even niet — typ je zorg gerust hieronder, dat werkt net zo goed."
         );
       } finally {
         setVoiceLoading(false);
@@ -344,6 +344,8 @@ export default function BurgerForm() {
           postcode: data.postcode,
           neighbourhood: data.neighbourhood,
           language: data.language,
+          lat: data.lat,
+          lon: data.lon,
         }),
       });
       if (!res.ok) throw new Error(`plan-uitleg ${res.status}`);
@@ -585,27 +587,75 @@ export default function BurgerForm() {
           </ol>
         </div>
 
-        <Link
-          href="/burger/mijn-zorgen"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 8,
-            padding: "16px 22px",
-            borderRadius: "var(--radius-md)",
-            background: "var(--moss-500)",
-            color: "var(--paper-50)",
-            fontFamily: "var(--font-sans)",
-            fontSize: 16,
-            fontWeight: 500,
-            textDecoration: "none",
-            boxShadow: "var(--shadow-sm)",
-          }}
-        >
-          Bekijk mijn zorgen
-          <ArrowIcon />
-        </Link>
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <button
+            type="button"
+            onClick={() => {
+              setChatHistory([]);
+              setCategory(null);
+              setConcernText("");
+              setSubmitError(null);
+              submitInFlight.current = false;
+              setStep("plan_uitleg");
+            }}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 8,
+              padding: "16px 22px",
+              borderRadius: "var(--radius-md)",
+              background: "var(--moss-500)",
+              color: "var(--paper-50)",
+              fontFamily: "var(--font-sans)",
+              fontSize: 16,
+              fontWeight: 500,
+              border: "none",
+              cursor: "pointer",
+              boxShadow: "var(--shadow-sm)",
+            }}
+          >
+            Nog een zorg of vraag
+            <ArrowIcon />
+          </button>
+          <button
+            type="button"
+            onClick={() => setStep("plan_uitleg")}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: "14px 22px",
+              borderRadius: "var(--radius-md)",
+              background: "var(--paper-0)",
+              color: "var(--ink-900)",
+              fontFamily: "var(--font-sans)",
+              fontSize: 15,
+              fontWeight: 500,
+              border: "1px solid var(--border-medium)",
+              cursor: "pointer",
+            }}
+          >
+            Terug naar het plan
+          </button>
+          <Link
+            href="/burger/mijn-zorgen"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 6,
+              padding: "8px 12px",
+              fontSize: 13,
+              fontWeight: 500,
+              color: "var(--fg-secondary)",
+              textDecoration: "underline",
+              fontFamily: "var(--font-sans)",
+            }}
+          >
+            Bekijk mijn zorgen
+          </Link>
+        </div>
       </div>
     );
   }
@@ -704,7 +754,7 @@ export default function BurgerForm() {
             onVoiceToggle={handleVoiceToggle}
             onSubmit={handleSubmit}
             onBack={() => setStep("plan_uitleg")}
-            onGeen={() => setStep("done")}
+            onGeen={() => setStep("plan_uitleg")}
           />
         )}
       </div>

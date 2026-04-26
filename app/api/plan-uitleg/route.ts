@@ -17,6 +17,8 @@ const RequestSchema = z.object({
   straatnaam: z.string().min(1).max(200),
   postcode: z.string().min(4).max(10),
   language: z.enum(["nl", "en", "es"]).default("nl"),
+  lat: z.number().optional(),
+  lon: z.number().optional(),
   forceFallback: z.boolean().optional(),
 });
 
@@ -25,6 +27,8 @@ async function tryClaude(
   straatnaam: string,
   postcode: string,
   language: ResidentLanguage,
+  lat: number | undefined,
+  lon: number | undefined,
 ): Promise<PlanUitlegReport | null> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return null;
@@ -34,7 +38,7 @@ async function tryClaude(
 
   try {
     const client = new Anthropic({ apiKey });
-    const prompt = buildPlanUitlegPrompt(voornaam, straatnaam, postcode, language);
+    const prompt = buildPlanUitlegPrompt(voornaam, straatnaam, postcode, language, lat, lon);
     const message = await client.messages.create(
       {
         model: MODEL,
@@ -78,7 +82,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const { voornaam, straatnaam, language, forceFallback } = parsed.data;
+  const { voornaam, straatnaam, language, lat, lon, forceFallback } = parsed.data;
 
   if (forceFallback) {
     return Response.json(getFallbackPlanUitleg(voornaam, straatnaam, language));
@@ -89,6 +93,8 @@ export async function POST(request: Request) {
     straatnaam,
     parsed.data.postcode,
     language,
+    lat,
+    lon,
   );
   return Response.json(
     claudeResult ?? getFallbackPlanUitleg(voornaam, straatnaam, language),
