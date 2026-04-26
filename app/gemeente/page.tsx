@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getConcerns, getCategoryStats } from "@/lib/data/concerns";
 import GemeenteWorkspace from "./GemeenteWorkspace";
 
@@ -40,17 +41,29 @@ export default async function GemeentePage() {
         WebkitBackdropFilter: "blur(20px)",
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <SamenspraakMark />
-          <span style={{
-            fontFamily: "var(--font-display)",
-            fontSize: 18,
-            fontWeight: 500,
-            color: "var(--ink-900)",
-            fontVariationSettings: "'opsz' 144, 'SOFT' 50",
-            letterSpacing: "-0.01em",
-          }}>
-            Samenspraak
-          </span>
+          <Link
+            href="/"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 12,
+              textDecoration: "none",
+              color: "inherit",
+            }}
+            aria-label="Terug naar Samenspraak homepage"
+          >
+            <SamenspraakMark />
+            <span style={{
+              fontFamily: "var(--font-display)",
+              fontSize: 18,
+              fontWeight: 500,
+              color: "var(--ink-900)",
+              fontVariationSettings: "'opsz' 144, 'SOFT' 50",
+              letterSpacing: "-0.01em",
+            }}>
+              Samenspraak
+            </span>
+          </Link>
           <span style={{ width: 1, height: 18, background: "var(--border-medium)", margin: "0 4px" }} />
           <span style={{ fontSize: 13, color: "var(--fg-tertiary)" }}>Gemeente De Bilt</span>
         </div>

@@ -260,7 +260,7 @@ export default function HomePage() {
           <AudienceCard
             href="/burger"
             accent="clay"
-            eyebrow="Bewoner"
+            eyebrow="Ik ben bewoner"
             title="Schrijf één keer. Krijg een onderbouwd antwoord terug."
             bullets={[
               "Plan in B1-Nederlands uitgelegd voor jouw adres",
@@ -271,7 +271,7 @@ export default function HomePage() {
           <AudienceCard
             href="/gemeente"
             accent="moss"
-            eyebrow="Gemeente"
+            eyebrow="Ik ben van de gemeente"
             title="Cluster honderden zorgen. Onderteken één verslag."
             bullets={[
               "50+ zorgen automatisch in 4 thema's",
