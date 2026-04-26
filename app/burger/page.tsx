@@ -1,5 +1,8 @@
 import Link from "next/link";
 import BurgerForm from "./BurgerForm";
+import { readAllPublishedReports } from "@/lib/data/published-reports";
+
+export const revalidate = 0;
 
 function SamenspraakMark() {
   return (
@@ -11,7 +14,8 @@ function SamenspraakMark() {
   );
 }
 
-export default function BurgerPage() {
+export default async function BurgerPage() {
+  const publishedReports = await readAllPublishedReports("schapenweide").catch(() => []);
   return (
     <div style={{ minHeight: "100vh", background: "var(--paper-50)", display: "flex", flexDirection: "column", fontFamily: "var(--font-sans)" }}>
       {/* Header */}
@@ -48,7 +52,7 @@ export default function BurgerPage() {
       {/* Content */}
       <main style={{ flex: 1, display: "flex", justifyContent: "center", paddingTop: 48, paddingBottom: 48, paddingLeft: 24, paddingRight: 24 }}>
         <div style={{ width: "100%" }}>
-          <BurgerForm />
+          <BurgerForm publishedReports={publishedReports} />
         </div>
       </main>
 

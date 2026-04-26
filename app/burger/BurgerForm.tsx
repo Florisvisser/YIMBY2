@@ -8,6 +8,7 @@ import {
   type PlanUitlegReport,
   type ChatMessage,
   type VraagResponse,
+  type PublishedReport,
 } from "@/lib/data/types";
 import { ArrowIcon, Eyebrow } from "./ui";
 import ProfileStep from "./steps/ProfileStep";
@@ -213,7 +214,11 @@ function PlanUitlegLoader() {
   );
 }
 
-export default function BurgerForm() {
+export default function BurgerForm({
+  publishedReports = [],
+}: {
+  publishedReports?: PublishedReport[];
+}) {
   const [step, setStep] = useState<Step>("profile");
 
   // Profile
@@ -355,34 +360,34 @@ export default function BurgerForm() {
       setPlanUitleg({
         source: "fallback",
         generatedAt: new Date().toISOString(),
-        intro: `Hallo ${data.voornaam || "bewoner"}, hier is wat het Schapenweide-plan voor jouw buurt betekent. Er komen 450 nieuwe woningen in Bilthoven.`,
+        intro: `Hallo ${data.voornaam || "bewoner"}, hier is wat het Schapenweide-plan voor jouw buurt betekent. Op het 12-hectare terrein tussen Antonie van Leeuwenhoeklaan, Soestdijkseweg Zuid en Groenekanseweg komen max. 450 woningen plus 25.000 m² life science.`,
         sections: [
           {
             category: "traffic_parking",
-            headline: "Meer verkeer verwacht",
+            headline: "Hoofdontsluiting via Antonie van Leeuwenhoeklaan",
             bodyText:
-              "De gemeente onderzoekt hoe de verkeersafwikkeling veilig blijft met 450 extra woningen.",
+              "Auto's rijden zoveel mogelijk via de noordzijde in en uit. Vrachtverkeer voor life science gaat niet door woongebieden. Parkeernorm 75% van CROW (~740 plekken), met inzet op deelmobiliteit.",
             impactLevel: "hoog",
           },
           {
             category: "building_height",
-            headline: "Gebouwen tot zes verdiepingen",
+            headline: "Lager aan de rand, hoger in het midden",
             bodyText:
-              "Hogere gebouwen kunnen meer schaduw geven op naastgelegen woningen en tuinen.",
+              "Aan de rand max. 11 meter (lokaal 15), in het centrale veld 15 meter, met hoogteaccent tot 25 meter aan de Antonie van Leeuwenhoeklaan. Bebouwing als losse paviljoens, geen blokken.",
             impactLevel: "gemiddeld",
           },
           {
             category: "green_nature",
-            headline: "Dassenburcht beschermd",
+            headline: "Dassenburcht beschermd, NNN aan de oostzijde",
             bodyText:
-              "Wettelijk beschermde dassen op het terrein worden meegenomen in de planvorming.",
+              "Beschermde dassen (Wet Natuurbescherming art. 3.10) op het terrein. Natuurnetwerk Nederland grenst aan de oostzijde. Historische bomenlanen blijven; bebouwingsvrije zone van min. 15 meter aan de perceelsgrenzen.",
             impactLevel: "gemiddeld",
           },
           {
             category: "noise_livability",
-            headline: "Bouwgeluid meerdere jaren",
+            headline: "Geluidsnorm 58 dB en bouwtijden",
             bodyText:
-              "De gemeente stelt bouwtijden en een meldpunt klachten in voor de bouwperiode.",
+              "Maximale hogere waarde Wgh is 58 dB. Life science labs op min. 50 meter van woningen. Bouwactiviteiten vallen onder vaste tijden van het Besluit bouwwerken leefomgeving (Bbl).",
             impactLevel: "laag",
           },
         ],
@@ -727,6 +732,7 @@ export default function BurgerForm() {
             voornaam={profile?.voornaam ?? ""}
             userLat={profile?.lat}
             userLon={profile?.lon}
+            publishedReports={publishedReports}
             onVraag={() => setStep("vraag_zorg")}
             onZorg={() => setStep("vraag_zorg")}
             onGeen={() => setStep("done")}

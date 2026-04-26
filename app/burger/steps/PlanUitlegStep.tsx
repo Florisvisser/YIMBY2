@@ -2,7 +2,12 @@
 
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
-import { CATEGORY_LABEL_NL, type PlanUitlegReport, type ConcernCategory } from "@/lib/data/types";
+import {
+  CATEGORY_LABEL_NL,
+  type PlanUitlegReport,
+  type ConcernCategory,
+  type PublishedReport,
+} from "@/lib/data/types";
 import {
   SCHAPENWEIDE_LAT,
   SCHAPENWEIDE_LON,
@@ -10,6 +15,7 @@ import {
   bearingLabel,
 } from "@/lib/geo/schapenweide";
 import { Eyebrow, Lead } from "../ui";
+import OfficieleStukkenSectie from "./OfficieleStukkenSectie";
 
 const PlanLocatieMap = dynamic(() => import("./PlanLocatieMap"), { ssr: false });
 
@@ -93,6 +99,7 @@ export default function PlanUitlegStep({
   voornaam,
   userLat,
   userLon,
+  publishedReports = [],
   onVraag,
   onZorg,
   onGeen,
@@ -101,6 +108,7 @@ export default function PlanUitlegStep({
   voornaam: string;
   userLat?: number;
   userLon?: number;
+  publishedReports?: PublishedReport[];
   onVraag: () => void;
   onZorg: () => void;
   onGeen: () => void;
@@ -395,6 +403,8 @@ export default function PlanUitlegStep({
           </p>
         )}
 
+        <OfficieleStukkenSectie publishedReports={publishedReports} />
+
         {/* Action buttons */}
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           <button
@@ -666,3 +676,4 @@ function OmgevingsvisieFigure() {
     </div>
   );
 }
+

@@ -113,6 +113,36 @@ export async function publishReport(
   return published;
 }
 
+export async function readAllPublishedReports(
+  projectId: string,
+): Promise<PublishedReport[]> {
+  const env = getEnv();
+  if (!env) {
+    console.warn(
+      "[published-reports] Supabase env vars ontbreken — geen verslagen beschikbaar.",
+    );
+    return [];
+  }
+
+  const res = await fetch(
+    `${env.url}/rest/v1/published_reports?project_id=eq.${encodeURIComponent(projectId)}&order=signed_at.desc`,
+    {
+      headers: makeHeaders(env.key),
+      cache: "no-store",
+    },
+  );
+
+  if (!res.ok) {
+    console.warn(
+      `[published-reports] readAll faalde (${res.status}) — lege lijst.`,
+    );
+    return [];
+  }
+
+  const rows = (await res.json()) as PublishedReportRow[];
+  return rows.map(rowToReport);
+}
+
 export async function readLatestPublishedReport(
   projectId: string,
 ): Promise<PublishedReport | null> {
