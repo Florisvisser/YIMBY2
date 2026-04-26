@@ -1,28 +1,28 @@
 {
-  "intro": "Hallo {voornaam}, hier is wat het Schapenweide-plan concreet voor de {straatnaam} betekent. Er komen 450 nieuwe woningen in Bilthoven. Hieronder zie je per thema wat dat voor jouw buurt betekent.",
+  "intro": "Hallo {voornaam}, hier is wat het Schapenweide-plan voor de buurt rond {straatnaam} betekent. Op het 12-hectare terrein tussen de Antonie van Leeuwenhoeklaan, Soestdijkseweg Zuid, Groenekanseweg en 1e Brandenburgerweg komen maximaal 450 woningen plus 25.000 m² life science. Hieronder zie je per thema wat dat voor je buurt betekent.",
   "sections": [
     {
       "category": "traffic_parking",
-      "headline": "Meer verkeer in jouw buurt verwacht",
-      "bodyText": "Er komen 450 nieuwe woningen. Dat betekent meer auto's op de Emmalaan en Nachtegaalstraat. De gemeente onderzoekt hoe de verkeersafwikkeling veilig kan blijven.",
+      "headline": "Hoofdontsluiting via Antonie van Leeuwenhoeklaan",
+      "bodyText": "Auto's rijden zoveel mogelijk via de Antonie van Leeuwenhoeklaan in en uit. Vrachtverkeer voor life science gaat NIET door woongebieden. De parkeernorm is 75% van de CROW-richtlijn — circa 740 plekken voor woningen plus life science. De gemeente zet in op deelmobiliteit en mogelijk parkeervergunningen om verschuiving naar omliggende wijken te voorkomen.",
       "impactLevel": "hoog"
     },
     {
       "category": "building_height",
-      "headline": "Gebouwen tot zes verdiepingen hoog",
-      "bodyText": "Het plan gaat uit van maximaal zes verdiepingen, terwijl de buurt nu voornamelijk twee tot drie lagen heeft. Hogere gebouwen kunnen meer schaduw geven op naastgelegen tuinen.",
+      "headline": "Lager aan de rand, hoger in het midden",
+      "bodyText": "Aan de rand van het terrein (langs bestaande bebouwing) is de bouwhoogte maximaal 11 meter, op enkele plekken 15 meter. In het centrale veld geldt 15 meter, met een hoogteaccent tot 25 meter aan de Antonie van Leeuwenhoeklaan. Doorzichten op de bestaande bomenrijen worden beschermd; nieuwe bouw bestaat uit losse paviljoens, geen aaneengesloten blokken.",
       "impactLevel": "gemiddeld"
     },
     {
       "category": "green_nature",
-      "headline": "Dassenburchten op het terrein beschermd",
-      "bodyText": "Op het Schapenweide-terrein leven wettelijk beschermde dassen. Groen en bomen worden zo veel mogelijk behouden. De gemeente schakelt een ecoloog in voor de bouw begint.",
+      "headline": "Beschermde dassenburcht en NNN-grens",
+      "bodyText": "Op het terrein leven beschermde dassen (Wet Natuurbescherming art. 3.10). Direct ten oosten begint Natuurnetwerk Nederland. De historische bomenlanen van het oude landgoed Jagtlust blijven behouden. Een groene kamerstructuur van minimaal 15 meter wordt versterkt voor flora en fauna; aan de perceelsgrens komt een 15-meter bebouwingsvrije zone.",
       "impactLevel": "gemiddeld"
     },
     {
       "category": "noise_livability",
-      "headline": "Bouwgeluid meerdere jaren merkbaar",
-      "bodyText": "De bouw van 450 woningen duurt meerdere jaren. Overdag kan er geluid zijn van machines en vrachtwagens. De gemeente stelt regels op voor bouwtijden en opent een meldpunt voor klachten.",
+      "headline": "Geluidsnorm 58 dB en bouwregels",
+      "bodyText": "ODRU heeft de geluidsbelasting wegverkeer in kaart gebracht; de maximaal toegestane hogere waarde is 58 dB. Voor life science labs gelden milieucirkels van 50-100 meter — geen woningen binnen 50 meter van labs. Bouwactiviteiten vallen onder vaste tijden van het Besluit bouwwerken leefomgeving (Bbl). Het terrein moet hittebestendig en klimaatadaptief worden ingericht.",
       "impactLevel": "laag"
     }
   ]

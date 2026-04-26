@@ -1,0 +1,184 @@
+{
+  "source": "Ontwikkelperspectief Schapenweide — gemeente De Bilt + Rijksvastgoedbedrijf + INBO (29 februari 2024)",
+  "sourceUrl": "https://www.debilt.nl/fileadmin/bestanden/Over_De_Bilt/Projecten/Schapenweide/Ontwikkelperspectief_Schapenweide.pdf",
+  "extractedAt": "2026-04-26",
+  "samenvatting": "Schapenweide is een 12 hectare gebied in Bilthoven, gemeente De Bilt, tussen de 1e Brandenburgerweg, Antonie van Leeuwenhoeklaan, Soestdijkseweg Zuid en Groenekanseweg. Het Rijksvastgoedbedrijf verkoopt het gebied; gemeente De Bilt verkoopt gelijktijdig een aangrenzend ongebruikt deel van begraafplaats Brandenburg. Het Ontwikkelperspectief gaat uit van maximaal 450 woningen plus 25.000 m² BVO life science (verlaagd van eerder 50.000 m²), met behoud van een sterke groenstructuur (kamerindeling), de centrale historische bomenlaan en de 19e-eeuwse boerderij. Het plan is richtinggevend kader voor verkoop en latere bestemmingsplanvorming; het is nog géén definitief bestemmingsplan.",
+  "ligging": {
+    "gemeente": "De Bilt",
+    "kern": "Bilthoven",
+    "oppervlak_hectare": 12,
+    "begrenzing": {
+      "noord": "Antonie van Leeuwenhoeklaan (grens met Utrecht Science Park Bilthoven)",
+      "oost": "Soestdijkseweg Zuid (grens met Natuurnetwerk Nederland)",
+      "zuid": "Groenekanseweg",
+      "west": "1e Brandenburgerweg en Beatrixlaan"
+    },
+    "postcodegebied": ["3721", "3722", "3723"]
+  },
+  "programma": {
+    "woningen_max": 450,
+    "lifescience_max_bvo_m2": 25000,
+    "woningmix": {
+      "sociale_huur_pct": 30,
+      "middenhuur_pct": 30,
+      "vrije_sector_pct": 40,
+      "betaalbare_koop_min_pct_van_vrije_sector": 6,
+      "betaalbare_koop_grens": "NHG-grens",
+      "doelgroepen_uit_woonvisie": "starters, jonge huishoudens, jonge gezinnen, eenpersoonshuishoudens, oudere huishoudens (vergrijzing), wonen-met-zorg",
+      "verdeling_principe": "verschillende woonsegmenten verdeeld over beschikbare gronden — voorkomen dat alleen sociale woningbouw gestapeld wordt uitgevoerd"
+    },
+    "lifescience_voorwaarden": "kantoren, labs (inperkingsniveau ML-I en ML-II), productie tot milieucategorie 2, GEEN vaccinproductie. Lab’s op minimaal 50 meter afstand van woongebied"
+  },
+  "themas": {
+    "traffic_parking": {
+      "label": "Verkeer & parkeren",
+      "feiten": [
+        "Hoofdontsluiting voor autoverkeer via Antonie van Leeuwenhoeklaan (noordzijde) — autoverkeer wordt zoveel mogelijk via die noordzijde geleid, in oostelijke en westelijke richting ontsloten.",
+        "Vrachtverkeer voor life sciences gaat NIET door de woongebieden van Schapenweide.",
+        "Twee indicatieve fietsontsluitingen op de Groenekanseweg + calamiteitenontsluiting op de Groenekanseweg.",
+        "Eén indicatieve auto- en/of fietsontsluiting op de Soestdijkseweg Zuid — niet primaire zoekrichting vanwege huidige belasting.",
+        "Bij het westen van het plangebied: één of meerdere voetgangers- en/of fietsverbindingen naar de Beatrixlaan.",
+        "Voetgangers en fietsers lopen langs de groenstructuren binnen het gebied; brede 25-meter overgangszone tussen rand en veld bevat de interne ontsluitingsweg."
+      ],
+      "parkeernormen": {
+        "uitgangspunt": "75% van de CROW-kengetallen (NIET 100%) — onderdeel van prestatieniveau zilver Convenant Duurzame Woningbouw.",
+        "berekening_voorbeeld": "Bij 100% CROW zou Schapenweide circa 970 parkeerplaatsen vragen. Met dubbelgebruik wonen↔life-science (verschillende piekuren overdag/avond/weekend) en 75% CROW komt het uit op circa 740 parkeerplaatsen.",
+        "wonen_eigen_terrein": "De parkeervraag van het wonen wordt op eigen terrein opgelost. Aanvullend wordt een beperkt aantal bezoekersparkeerplaatsen in de openbare ruimte gerealiseerd.",
+        "lagere_norm_optie": "Een nóg lagere parkeernorm wordt door de gemeente aangemoedigd, mits met flankerend beleid (betere OV-voorzieningen, deelmobiliteit). Zonder flankerend beleid niet haalbaar — risico dat Schapenweide-bewoners in omliggende wijken parkeren.",
+        "gebouwd_parkeren": "Gebouwd parkeren is zeer wenselijk om het groene open karakter van rand en veld te behouden. Parkeren wordt geïntegreerd in de groene inrichting van de openbare ruimte.",
+        "uitwisseling": "In overleg met partijen in de directe omgeving kan uitwisseling van parkeerdruk worden overwogen."
+      },
+      "flankerend_beleid": [
+        "Mogelijk systeem van parkeervergunningen voor sommige gebieden om parkeerverplaatsing naar omliggende wijken te voorkomen.",
+        "Stimuleren van deelmobiliteit (deelauto, deelfiets) — passend aandeel van bewoners krijgt deelmobiliteitsconcept aangeboden.",
+        "STOMP-principe (Stappen, Trappen, OV, MaaS, Privé-auto) als prioriteitsvolgorde tussen vervoersmodaliteiten.",
+        "Mobiliteitstransitie: minder fossiele brandstoffen, verschuiving naar lopen/fietsen/OV, voor noodzakelijke autoritten flexibel + uitstootvrij.",
+        "Bij bouwontwikkelingen niet meer alleen parkeernorm, maar een MobiliteitsProgramma van Eisen (MPvE)."
+      ],
+      "verwijzingen": [
+        "Mobiliteitsvisie De Bilt 2023",
+        "Verkeerscirculatieplan: Wat beweegt De Bilt? — variant 3A",
+        "CROW-kengetallen — uitgangspunt 75%",
+        "Convenant Duurzame Woningbouw provincie Utrecht — prestatieniveau zilver"
+      ]
+    },
+    "building_height": {
+      "label": "Bouwhoogte & uitzicht",
+      "feiten": [
+        "Plangebied is opgedeeld in een 'rand' (langs bestaande bebouwing) en een 'veld' (centraal). Voor beide gelden andere bouwhoogtes en bebouwingspercentages.",
+        "Rand: gemiddeld maximaal 15% bebouwd oppervlak, voorkeur evenredige spreiding.",
+        "Veld: gemiddeld maximaal 30% bebouwd oppervlak, voorkeur evenredige spreiding.",
+        "Bebouwing als losse objecten (paviljoens of compacte ensembles) in het groen — geen aaneengesloten bouwblokken of langgerekte rijen.",
+        "Doorzichten op de bestaande bomenrijen worden expliciet beschermd; niet bouwen in kroonprojectie van bestaande bomen.",
+        "Tussen rand en veld ligt een 25 meter brede groene overgangszone met de interne ontsluitingsweg.",
+        "De rand sluit qua karakter, korrelgrootte en hoogte aan op de bestaande omliggende bebouwing — exact 'spiegelen' is NIET gewenst."
+      ],
+      "hoogtes": {
+        "rand_max_meter": 11,
+        "rand_uitzondering_westelijk_noordoostelijk_meter": 15,
+        "veld_max_meter": 15,
+        "veld_uitzondering_noordzijde_antonie_van_leeuwenhoeklaan_meter": 20,
+        "hoogteaccent_max_meter": 25,
+        "hoogteaccent_voorwaarden": "alleen aan noordzijde veld (Antonie van Leeuwenhoeklaan), maximaal 20% van het bouwveld, mits stedenbouwkundig/architectonisch wenselijk en ‘goed ingepast’"
+      },
+      "context_bestaande_bebouwing": "De direct aangrenzende bebouwing langs Emmalaan/Nachtegaalstraat/Groenekanseweg is overwegend 2-3 lagen. De 11 meter rand komt daar dichtbij; de 15-20 meter velden en het 25 meter accent vallen daar duidelijk boven.",
+      "verwijzingen": [
+        "Welstandsnota gemeente De Bilt (2013) — buitengebied",
+        "Beeldkwaliteitplan ‘Groen in Beeld’",
+        "Hoofdstuk 6 Stedenbouwkundige randvoorwaarden van het Ontwikkelperspectief"
+      ]
+    },
+    "green_nature": {
+      "label": "Groen & natuur",
+      "feiten": [
+        "De projectlocatie GRENST aan Natuurnetwerk Nederland (NNN), direct ten oosten langs de Soestdijkseweg Zuid.",
+        "Beschermde dassenburcht (Meles meles) op het terrein — vaste verblijfplaatsen + foerageergebieden, beschermd onder Wet Natuurbescherming artikel 3.10.",
+        "Werkzaamheden hebben mogelijk effect op de das; nader onderzoek noodzakelijk voor eventuele ontheffing Wet Natuurbescherming.",
+        "Andere beschermde soortgroepen mogelijk aanwezig: zoogdieren, vleermuizen, jaarrond beschermde vogels (geen buizerd-nesten op locatie), reptielen, amfibieën — nader ecologisch onderzoek nodig.",
+        "Vos en bunzing zijn vrijgesteld van ontheffing maar wel aanwezig.",
+        "Hazelworm, levendbarende hagedis, jaarrond beschermde vogel-nesten zijn NIET op de projectlocatie aangetroffen.",
+        "Ecologische quickscan uitgevoerd in april 2023; agrarische activiteiten op de locatie zijn sinds 2018 gestopt — situatie kan veranderd zijn, nader onderzoek nodig in vervolgfase.",
+        "Schapenweide moet habitat blijven bieden voor diersoorten — groene kamerstructuur fungeert als ecologische verbinding/transportroute (das gebruikt kleinere faunapassages in de gemeente).",
+        "Centrale historische bomenlaan + tweede bomenrij oost-west bij de boerderij = historische houtwallen, behoort tot oorspronkelijke parkaanleg buitenplaats Jagtlust. EXPLICIETE WENS: behouden + versterken.",
+        "Streven om groene kamerstructuur ecologisch en natuur-inclusief te maken (broedplaatsen, voedsel, beschutting) en missende verbindingen te planten."
+      ],
+      "groene_kamerstructuur": {
+        "te_behouden_groene_kamer": "indicatieve breedte 15 meter",
+        "verbinden_groene_kamer": "indicatieve breedte 15 meter",
+        "bebouwingsvrije_zone_perceelsgrens": "minimaal 15 meter, parkeren niet toegestaan, zoveel mogelijk natuurlijk karakter",
+        "langs_begraafplaats": "minimaal 15 meter met behoud + versterking aanwezige bomenrij"
+      },
+      "water": {
+        "tertiaire_watergang": "ten westen van Soestdijkseweg Zuid en ten zuiden van Antonie van Leeuwenhoeklaan, langs de houtwal — beschermingszone 2 meter, agrarische bestemming.",
+        "waterwingebied_beerschoten": "deel Soestdijkseweg Zuid ligt in 100-jaarsaandachtsgebied; gebiedsaanduiding ‘milieuzone — grondwaterbeschermingsgebied’. Aanvullende provinciale regels.",
+        "klimaatadaptatie": "Klimaatadaptatievisie 2050 + Water- en Rioleringsplan 2022-2026: opgaven wateroverlast, droogte, hitte, overstromingen, schade. Ambitie maximaal afkoppelen, vergroenen, hemelwater vasthouden waar het valt.",
+        "hittebestendigheid": "schaduwvoorziening tijdens hitte verplicht; gezonde aantrekkelijke leefomgeving."
+      },
+      "verwijzingen": [
+        "Wet Natuurbescherming art. 3.10 — beschermde das",
+        "Natuurnetwerk Nederland (voorheen Ecologische Hoofdstructuur)",
+        "Klimaatadaptatievisie 2050 gemeente De Bilt",
+        "Water- en Rioleringsplan De Bilt 2022-2026",
+        "Convenant Duurzame Woningbouw — prestatieniveau zilver voor groen",
+        "Groenstructuurplan 2014-2024",
+        "Provinciale Ruimtelijke Verordening — milieuzone grondwaterbeschermingsgebied",
+        "Ecologische quickscan april 2023"
+      ]
+    },
+    "noise_livability": {
+      "label": "Geluid & leefbaarheid",
+      "feiten": [
+        "ODRU heeft de geluidssituatie wegverkeer voor 2025 in kaart gebracht; voor nieuwbouw mogelijk akoestisch onderzoek + hogere waarden Wgh nodig.",
+        "Maximaal toegestane hogere waarde Wgh: 58 dB.",
+        "Beleidsregel hogere waarden Wgh (gemeente De Bilt) en gemeentelijke Geluidsnota (2012) zijn van toepassing.",
+        "Extra verkeersdruk op Groenekanseweg en Soestdijkseweg Zuid kan tot significante veranderingen leiden — aanvullend luchtkwaliteits- én akoestisch onderzoek gewenst.",
+        "Direct ten noorden, zuiden en westen van de Schapenweide bevinden zich panden met bedrijfsbestemming (life science/health). Milieucirkel 100 meter, voorwaardelijk 50 meter — binnen 50 meter géén woningen.",
+        "Tankstation noordoost van het plangebied (bevi-inrichting) — PR-contour beïnvloedt het plangebied NIET.",
+        "Bouwactiviteiten vallen onder Besluit bouwwerken leefomgeving (Bbl) en gemeentelijke bouwverordening — aanvang- en eindtijden reglementair vastgelegd.",
+        "Convenant Duurzame Woningbouw — streven prestatieniveau brons voor gezonde leefomgeving (energie + circulair + leefomgeving op woningniveau)."
+      ],
+      "milieuzonering": {
+        "lifescience_lab_afstand_meter": 50,
+        "lab_inperkingsniveau": "uitsluitend ML-I en ML-II",
+        "milieucirkel_max_meter": 100,
+        "milieucirkel_voorwaardelijk_meter": 50
+      },
+      "verwijzingen": [
+        "Wet geluidhinder + Beleidsregel hogere waarden Wgh",
+        "Geluidsnota gemeente De Bilt 2012",
+        "Besluit bouwwerken leefomgeving (Bbl)",
+        "ODRU geluidkaart via geo-loket www.odru.nl",
+        "VNG-bedrijven en milieuzonering"
+      ]
+    }
+  },
+  "cultuurhistorie": {
+    "feiten": [
+      "19e-eeuwse boerderij aan Soestdijkseweg Zuid 119 — enige historische bebouwing op het terrein, hoge cultuurhistorische waarde, behouden + omgeving (semi-)openbare functie mogelijk.",
+      "Centrale historische bomenrij + tweede oost-west bomenrij bij de boerderij — onderdeel oorspronkelijke parkaanleg buitenplaats Jagtlust (12e-19e eeuw klooster Oostbroek).",
+      "Schapenweide ligt in oorspronkelijke park van landgoed Jagtlust; weteringen (vroegere Groenekanseweg) zijn herkenbaar in stratenpatroon.",
+      "Verwachte Archeologische Waarde 2 (VAW2): archeologisch onderzoek nodig bij ingrepen dieper dan 50 cm of groter dan 500 m²."
+    ]
+  },
+  "fasering_status": {
+    "datum_publicatie": "29 februari 2024",
+    "status": "Ontwikkelperspectief — richtinggevend kader voor verkoop door RVB en latere bestemmingsplanvorming. Nog GEEN definitief bestemmingsplan. Wordt onderdeel van de nog vast te stellen Omgevingsvisie De Bilt.",
+    "gemeentelijke_woningambitie_tot_2030": "minimaal 1.130 woningen toevoegen in totaal in De Bilt (350 sociale huur, 190 middenhuur, 590 koop)",
+    "schapenweide_aandeel": "max 450 woningen — substantieel deel van de 1.130-doelstelling",
+    "geplande_bouwperiode": "2026-2030 (volgens project-context)"
+  },
+  "energie_klimaat": {
+    "feiten": [
+      "Routekaart Energieneutraal De Bilt 2030: gemeente streeft naar evenveel opgewekte als verbruikte energie binnen gemeentegrens in 2030.",
+      "Stapsgewijs van het aardgas af; gemeente neemt regie samen met direct betrokkenen.",
+      "Inzet op energiebesparing + zonnestroom op kleine en grote daken; zonnevelden onder strenge criteria buiten beschermd buitengebied.",
+      "Convenant Duurzame Woningbouw provincie Utrecht — Schapenweide streeft prestatieniveau ZILVER voor mobiliteit/groen/klimaat/natuur en BRONS voor energie/circulair/gezonde leefomgeving (op woningniveau).",
+      "BENG! (lokale energie-coöperatie De Bilt) — gemeente werkt met partners in Bilts Energie Akkoord."
+    ]
+  },
+  "participatie_en_proces": {
+    "wettelijk_niveau": "minimaal MEEDENKEN voor stedenbouwkundig-, beeldkwaliteits- en omgevingsplan; voor verkeer en groen MEEWERKEN.",
+    "ontwikkelaar_verplichting": "Participatieplan opstellen in samenwerking met gemeente waarbij direct belanghebbenden (omwonenden, bewonersorganisaties) ruimte krijgen om input te geven.",
+    "eerder_proces": "diverse versies + participatieproces vanaf 2018; informatiebijeenkomst april 2018; coalitieakkoord 2022-2026 leidde tot huidige aanscherpingen (450 woningen i.p.v. 200, halvering life science van 50.000 naar 25.000 m²)."
+  }
+}

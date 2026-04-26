@@ -5,17 +5,7 @@ import {
   haversineKm,
   bearingLabel,
 } from "@/lib/geo/schapenweide";
-
-const SCHAPENWEIDE_CONTEXT = `
-Project: Schapenweide, Bilthoven, gemeente De Bilt
-450 nieuwe woningen gepland voor 2026-2030
-Postcodegebied: 3721, 3722, 3723
-Bekende ontsluitingsstraten in de wijk: Emmalaan (hoofdontsluiting - druk), Nachtegaalstraat (schoolroute),
-  Soestdijkseweg, Vinkenlaan, Berlagelaan, Schapenweide-weg (alternatieve ontsluiting)
-Ecologie: beschermde dassenburcht (Meles meles, Wet Natuurbescherming art. 3.10) op het terrein
-Bouwhoogte: plan gaat uit van max 6 lagen; bewoners willen max 4 lagen
-4 thema's die bewoners raken: Verkeer & parkeren, Bouwhoogte & uitzicht, Groen & natuur, Geluid & leefbaarheid
-`.trim();
+import { renderPlanKnowledgeForPrompt } from "@/lib/plan-knowledge/render";
 
 const SCHEMA_GUIDE = `{
   "intro": "<2-3 sentences, address the resident personally, mention their street if it is near the plan area>",
@@ -78,12 +68,14 @@ You explain in plain language what the Schapenweide building project means for a
 Resident: ${voornaam}, lives at ${straatnaam || "unknown street"} (${postcode}) in Bilthoven.
 ${locationLine}
 
-Project information (in Dutch — translate the relevant facts into the output language):
-${SCHAPENWEIDE_CONTEXT}
+Authoritative project information (translate the relevant facts into the output language):
+${renderPlanKnowledgeForPrompt()}
 
 Write a short personal intro (2-3 sentences, address ${voornaam} personally and reference ${straatnaam || "their street"} when relevant). Base the impactLevel per theme on the proximity and direction of the resident's home to the plan area. Use "hoog" sparingly — only when the theme has truly direct impact on this address.
 
-IMPORTANT — street references: Mention "Emmalaan" or "Nachtegaalstraat" ONLY if the resident's street is one of those, or directly adjacent. For residents living elsewhere, refer to their own street (${straatnaam || "their street"}) and the computed direction toward the plan, not the generic Emmalaan/Nachtegaalstraat list.
+IMPORTANT — street references: Reference the resident's own street (${straatnaam || "their street"}) and the computed direction toward the plan, not generic streets like Emmalaan or Nachtegaalstraat unless the resident actually lives there or directly adjacent.
+
+IMPORTANT — facts: Use ONLY facts from the plan information above. When discussing parking, building heights, traffic routing, ecology (das/dassenburcht), water (Beerschoten/NNN), noise (58 dB Wgh), or programme mix (30/30/40), use the specific numbers and references from the plan information. Do NOT invent numbers.
 
 The impactLevel enum value MUST stay exactly "laag" | "gemiddeld" | "hoog" (Dutch keys — these are machine-readable, do not translate). All other text fields (intro, headline, bodyText) MUST be in the output language declared above.
 
