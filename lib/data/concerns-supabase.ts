@@ -22,6 +22,9 @@ type SupabaseConcernRow = {
   signed_answer: string | null;
   signed_answer_at: string | null;
   signed_answer_reference: string | null;
+  // Three-sided platform (Deploy A — added in 2026-04-26 migration)
+  plan_slug: string | null;
+  feedback_round_id: string | null;
 };
 
 function rowToConcern(row: SupabaseConcernRow): Concern {
@@ -275,6 +278,7 @@ export async function insertSupabaseConcern(
     );
   }
 
+  // Dual-write: project_id (legacy) AND plan_slug (new). Cutover in Session 2.
   const res = await fetch(`${env.url}/rest/v1/concerns`, {
     method: "POST",
     headers: {
@@ -283,7 +287,11 @@ export async function insertSupabaseConcern(
       "Content-Type": "application/json",
       Prefer: "return=representation",
     },
-    body: JSON.stringify({ ...payload, project_id: "schapenweide" }),
+    body: JSON.stringify({
+      ...payload,
+      project_id: "schapenweide",
+      plan_slug: "schapenweide",
+    }),
   });
 
   if (!res.ok) {
